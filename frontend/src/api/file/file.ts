@@ -1,5 +1,5 @@
 import request from '@/api/request'
-import type { FileInfo } from '@/api/types/file'
+import type { FileInfo, FileSearchParams } from '@/api/types/file'
 import type { PageRequest, PageResult } from '@/api/types/common'
 
 /**
@@ -15,7 +15,37 @@ export const getFileList = (params: PageRequest & {
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
 }) => {
-  return request.get<PageResult<FileInfo>>('/files', { params })
+  // 转换前端参数为后端参数格式
+  const backendParams: any = {
+    page: params.page,
+    size: params.size,
+    keyword: params.keyword,
+    fileType: params.fileType,
+    orderBy: params.sortBy,
+    orderDirection: params.sortOrder
+  }
+  
+  // 处理时间范围
+  if (params.dateRange) {
+    // TODO: 解析时间范围字符串，设置startTime和endTime
+  }
+  
+  // 处理大小范围
+  if (params.sizeRange) {
+    // TODO: 解析大小范围字符串，设置minSize和maxSize
+  }
+  
+  // 处理标签
+  if (params.tags && params.tags.length > 0) {
+    backendParams.tags = params.tags.join(',')
+  }
+  
+  // 处理上传者
+  if (params.uploader) {
+    backendParams.uploadUserName = params.uploader
+  }
+  
+  return request.get<PageResult<FileInfo>>('/files', { params: backendParams })
 }
 
 /**
@@ -28,18 +58,37 @@ export const getFileDetail = (id: number) => {
 /**
  * 上传文件
  */
-export const uploadFile = (file: File, onProgress?: (progress: number) => void) => {
+export const uploadFile = (file: File, options?: {
+  description?: string
+  tags?: string
+  isPublic?: number
+  parentFolderId?: number
+  onProgress?: (progress: number) => void
+}) => {
   const formData = new FormData()
   formData.append('file', file)
+  
+  if (options?.description) {
+    formData.append('description', options.description)
+  }
+  if (options?.tags) {
+    formData.append('tags', options.tags)
+  }
+  if (options?.isPublic !== undefined) {
+    formData.append('isPublic', options.isPublic.toString())
+  }
+  if (options?.parentFolderId) {
+    formData.append('parentFolderId', options.parentFolderId.toString())
+  }
   
   return request.post<FileInfo>('/files/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     },
     onUploadProgress: (progressEvent) => {
-      if (onProgress && progressEvent.total) {
+      if (options?.onProgress && progressEvent.total) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        onProgress(progress)
+        options.onProgress(progress)
       }
     }
   })
@@ -48,20 +97,39 @@ export const uploadFile = (file: File, onProgress?: (progress: number) => void) 
 /**
  * 批量上传文件
  */
-export const batchUploadFiles = (files: File[], onProgress?: (progress: number) => void) => {
+export const batchUploadFiles = (files: File[], options?: {
+  description?: string
+  tags?: string
+  isPublic?: number
+  parentFolderId?: number
+  onProgress?: (progress: number) => void
+}) => {
   const formData = new FormData()
   files.forEach(file => {
     formData.append('files', file)
   })
+  
+  if (options?.description) {
+    formData.append('description', options.description)
+  }
+  if (options?.tags) {
+    formData.append('tags', options.tags)
+  }
+  if (options?.isPublic !== undefined) {
+    formData.append('isPublic', options.isPublic.toString())
+  }
+  if (options?.parentFolderId) {
+    formData.append('parentFolderId', options.parentFolderId.toString())
+  }
   
   return request.post<FileInfo[]>('/files/batch-upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     },
     onUploadProgress: (progressEvent) => {
-      if (onProgress && progressEvent.total) {
+      if (options?.onProgress && progressEvent.total) {
         const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        onProgress(progress)
+        options.onProgress(progress)
       }
     }
   })
@@ -110,14 +178,18 @@ export const updateFile = (id: number, data: Partial<FileInfo>) => {
  * 移动文件
  */
 export const moveFile = (id: number, targetFolderId: number) => {
-  return request.post(`/files/${id}/move`, { targetFolderId })
+  return request.post(`/files/${id}/move`, null, {
+    params: { targetFolderId }
+  })
 }
 
 /**
  * 复制文件
  */
 export const copyFile = (id: number, targetFolderId: number) => {
-  return request.post(`/files/${id}/copy`, { targetFolderId })
+  return request.post(`/files/${id}/copy`, null, {
+    params: { targetFolderId }
+  })
 }
 
 /**
@@ -137,9 +209,9 @@ export const getFileContent = (id: number) => {
 /**
  * 获取文件缩略图
  */
-export const getFileThumbnail = (id: number, size = 'medium') => {
+export const getFileThumbnail = (id: number, width = 200, height = 200) => {
   return request.get(`/files/${id}/thumbnail`, {
-    params: { size },
+    params: { width, height },
     responseType: 'blob'
   })
 }
@@ -147,17 +219,8 @@ export const getFileThumbnail = (id: number, size = 'medium') => {
 /**
  * 搜索文件
  */
-export const searchFiles = (params: {
-  keyword: string
-  fileType?: string
-  dateRange?: string
-  sizeRange?: string
-  uploader?: string
-  tags?: string[]
-  page?: number
-  size?: number
-}) => {
-  return request.get<PageResult<FileInfo>>('/files/search', { params })
+export const searchFiles = (params: FileSearchParams) => {
+  return request.post<PageResult<FileInfo>>('/files/search', params)
 }
 
 /**

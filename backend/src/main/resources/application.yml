@@ -57,9 +57,21 @@ jwt:
 # 文件上传配置
 file:
   upload:
-    max-size: -1
-    chunk-size: 1048576
+    max-size: 104857600  # 100MB
+    chunk-size: 5242880  # 5MB
     temp-dir: /tmp/upload
+    allowed-types: jpg,jpeg,png,gif,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,7z,mp4,avi,mov,mp3,wav
+    chunk-concurrency: 3
+
+# 存储策略配置
+storage:
+  path-template: "files/{userId}/{year}/{month}/{day}/{filename}"
+  deduplication: true
+  compression: false
+  encryption: false
+  retention-days: 3650  # 10年
+  versioning: true
+  max-versions: 5
 
 # 日志配置
 logging:

@@ -1,190 +1,131 @@
 package com.esfile.service.system.impl;
 
-import com.esfile.common.vo.PageResult;
 import com.esfile.entity.mybatis.Role;
+import com.esfile.entity.mybatis.RolePermission;
 import com.esfile.mapper.RoleMapper;
 import com.esfile.service.system.RoleService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
- * 角色服务实现类
- * 
- * @author esfile
- * @since 2024-01-01
+ * 角色管理服务实现类
  */
-@Slf4j
 @Service
 public class RoleServiceImpl implements RoleService {
-    
+
     @Autowired
     private RoleMapper roleMapper;
-    
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean createRole(Role role) {
-        try {
-            // 检查角色编码是否已存在
-            if (isRoleCodeExists(role.getRoleCode(), null)) {
-                log.warn("角色编码已存在: {}", role.getRoleCode());
-                return false;
-            }
-            
-            // 设置默认值
-            if (role.getStatus() == null) {
-                role.setStatus(1);
-            }
-            if (role.getSort() == null) {
-                role.setSort(0);
-            }
-            if (role.getIsSystem() == null) {
-                role.setIsSystem(0);
-            }
-            
-            int result = roleMapper.insert(role);
-            return result > 0;
-        } catch (Exception e) {
-            log.error("创建角色失败", e);
-            throw new RuntimeException("创建角色失败", e);
-        }
+    public List<Role> getRoleList() {
+        return roleMapper.selectAll();
     }
-    
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateRole(Role role) {
-        try {
-            // 检查角色编码是否已存在（排除当前角色）
-            if (isRoleCodeExists(role.getRoleCode(), role.getId())) {
-                log.warn("角色编码已存在: {}", role.getRoleCode());
-                return false;
-            }
-            
-            int result = roleMapper.updateById(role);
-            return result > 0;
-        } catch (Exception e) {
-            log.error("更新角色失败", e);
-            throw new RuntimeException("更新角色失败", e);
-        }
-    }
-    
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRole(Long id) {
-        try {
-            // 检查是否为系统角色
-            Role role = roleMapper.selectById(id);
-            if (role != null && role.getIsSystem() == 1) {
-                log.warn("系统角色不能删除: {}", id);
-                return false;
-            }
-            
-            int result = roleMapper.deleteById(id);
-            return result > 0;
-        } catch (Exception e) {
-            log.error("删除角色失败", e);
-            throw new RuntimeException("删除角色失败", e);
-        }
-    }
-    
+
     @Override
     public Role getRoleById(Long id) {
-        try {
-            return roleMapper.selectById(id);
-        } catch (Exception e) {
-            log.error("查询角色失败", e);
-            throw new RuntimeException("查询角色失败", e);
-        }
+        return roleMapper.selectById(id);
     }
-    
+
     @Override
-    public Role getRoleByCode(String roleCode) {
-        try {
-            return roleMapper.selectByRoleCode(roleCode);
-        } catch (Exception e) {
-            log.error("查询角色失败", e);
-            throw new RuntimeException("查询角色失败", e);
+    @Transactional
+    public Role createRole(Role role) {
+        // 检查角色编码是否已存在
+        if (isRoleCodeExists(role.getRoleCode())) {
+            throw new RuntimeException("角色编码已存在");
         }
+        
+        // 设置默认值
+        role.setCreateTime(LocalDateTime.now());
+        role.setUpdateTime(LocalDateTime.now());
+        role.setStatus(1);
+        
+        // 插入角色
+        roleMapper.insert(role);
+        return role;
     }
-    
+
     @Override
-    public List<Role> getAllRoles() {
-        try {
-            return roleMapper.selectAll();
-        } catch (Exception e) {
-            log.error("查询所有角色失败", e);
-            throw new RuntimeException("查询所有角色失败", e);
+    @Transactional
+    public Role updateRole(Role role) {
+        Role existingRole = getRoleById(role.getId());
+        if (existingRole == null) {
+            throw new RuntimeException("角色不存在");
         }
-    }
-    
-    @Override
-    public PageResult<Role> getRolePage(int page, int size) {
-        try {
-            int offset = (page - 1) * size;
-            List<Role> roles = roleMapper.selectPage(offset, size);
-            long total = roleMapper.selectCount();
-            
-            PageResult<Role> result = new PageResult<>();
-            result.setData(roles);
-            result.setTotal(total);
-            result.setCurrentPage(page);
-            result.setPageSize(size);
-            result.setTotalPages((int) Math.ceil((double) total / size));
-            
-            return result;
-        } catch (Exception e) {
-            log.error("分页查询角色失败", e);
-            throw new RuntimeException("分页查询角色失败", e);
+        
+        // 检查角色编码是否被其他角色使用
+        Role roleByCode = roleMapper.selectByRoleCode(role.getRoleCode());
+        if (roleByCode != null && !roleByCode.getId().equals(role.getId())) {
+            throw new RuntimeException("角色编码已存在");
         }
+        
+        // 设置更新时间
+        role.setUpdateTime(LocalDateTime.now());
+        
+        // 更新角色
+        roleMapper.updateById(role);
+        return getRoleById(role.getId());
     }
-    
+
     @Override
-    public List<Role> getRolesByUserId(Long userId) {
-        try {
-            return roleMapper.selectByUserId(userId);
-        } catch (Exception e) {
-            log.error("查询用户角色失败", e);
-            throw new RuntimeException("查询用户角色失败", e);
+    @Transactional
+    public boolean deleteRole(Long id) {
+        // 删除角色权限关联
+        roleMapper.deleteRolePermissions(id);
+        
+        // 删除用户角色关联
+        roleMapper.deleteUserRoles(id);
+        
+        // 删除角色
+        return roleMapper.deleteById(id) > 0;
+    }
+
+    @Override
+    @Transactional
+    public boolean batchDeleteRoles(List<Long> ids) {
+        // 批量删除角色权限关联
+        for (Long id : ids) {
+            roleMapper.deleteRolePermissions(id);
+            roleMapper.deleteUserRoles(id);
         }
+        
+        // 批量删除角色
+        return roleMapper.batchDeleteByIds(ids) > 0;
     }
-    
+
     @Override
-    public List<Role> getRolesByStatus(Integer status) {
-        try {
-            return roleMapper.selectByStatus(status);
-        } catch (Exception e) {
-            log.error("查询角色失败", e);
-            throw new RuntimeException("查询角色失败", e);
-        }
+    public List<Long> getRolePermissions(Long roleId) {
+        return roleMapper.selectRolePermissionIds(roleId);
     }
-    
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional
     public boolean assignPermissions(Long roleId, List<Long> permissionIds) {
-        try {
-            // TODO: 实现角色权限分配逻辑
-            log.info("分配角色权限: roleId={}, permissionIds={}", roleId, permissionIds);
-            return true;
-        } catch (Exception e) {
-            log.error("分配角色权限失败", e);
-            throw new RuntimeException("分配角色权限失败", e);
-        }
-    }
-    
-    @Override
-    public boolean isRoleCodeExists(String roleCode, Long excludeId) {
-        try {
-            Role existingRole = roleMapper.selectByRoleCode(roleCode);
-            if (existingRole == null) {
-                return false;
+        // 先删除原有权限关联
+        roleMapper.deleteRolePermissions(roleId);
+        
+        // 添加新的权限关联
+        if (permissionIds != null && !permissionIds.isEmpty()) {
+            for (Long permissionId : permissionIds) {
+                RolePermission rolePermission = new RolePermission(roleId, permissionId);
+                roleMapper.insertRolePermission(rolePermission);
             }
-            return !existingRole.getId().equals(excludeId);
-        } catch (Exception e) {
-            log.error("检查角色编码是否存在失败", e);
-            throw new RuntimeException("检查角色编码是否存在失败", e);
         }
+        
+        return true;
+    }
+
+    @Override
+    public List<Map<String, Object>> getRoleUsers(Long roleId) {
+        return roleMapper.selectRoleUsers(roleId);
+    }
+
+    @Override
+    public boolean isRoleCodeExists(String roleCode) {
+        return roleMapper.selectByRoleCode(roleCode) != null;
     }
 }

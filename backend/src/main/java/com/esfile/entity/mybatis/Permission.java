@@ -1,17 +1,16 @@
 package com.esfile.entity.mybatis;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import java.time.LocalDateTime;
 
 /**
  * 权限实体类
- * 
- * @author esfile
- * @since 2024-01-01
  */
-@Data
-@EqualsAndHashCode(callSuper = true)
-public class Permission extends BaseEntity {
+public class Permission {
+    
+    /**
+     * 主键ID
+     */
+    private Long id;
     
     /**
      * 权限名称
@@ -29,22 +28,22 @@ public class Permission extends BaseEntity {
     private Integer permissionType;
     
     /**
-     * 权限路径
-     */
-    private String permissionPath;
-    
-    /**
-     * 权限描述
-     */
-    private String description;
-    
-    /**
      * 父级权限ID
      */
     private Long parentId;
     
     /**
-     * 排序
+     * 权限路径
+     */
+    private String permissionPath;
+    
+    /**
+     * 权限图标
+     */
+    private String permissionIcon;
+    
+    /**
+     * 权限排序
      */
     private Integer sort;
     
@@ -54,17 +53,153 @@ public class Permission extends BaseEntity {
     private Integer status;
     
     /**
-     * 图标
+     * 是否可见：0-否，1-是
      */
-    private String icon;
+    private Integer visible;
     
     /**
-     * 组件路径
+     * 创建时间
      */
-    private String component;
+    private LocalDateTime createTime;
     
     /**
-     * 是否外链：0-否，1-是
+     * 更新时间
      */
-    private Integer isExternal;
+    private LocalDateTime updateTime;
+    
+    /**
+     * 创建者
+     */
+    private String createBy;
+    
+    /**
+     * 更新者
+     */
+    private String updateBy;
+    
+    /**
+     * 备注
+     */
+    private String remark;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getPermissionName() {
+        return permissionName;
+    }
+
+    public void setPermissionName(String permissionName) {
+        this.permissionName = permissionName;
+    }
+
+    public String getPermissionCode() {
+        return permissionCode;
+    }
+
+    public void setPermissionCode(String permissionCode) {
+        this.permissionCode = permissionCode;
+    }
+
+    public Integer getPermissionType() {
+        return permissionType;
+    }
+
+    public void setPermissionType(Integer permissionType) {
+        this.permissionType = permissionType;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public String getPermissionPath() {
+        return permissionPath;
+    }
+
+    public void setPermissionPath(String permissionPath) {
+        this.permissionPath = permissionPath;
+    }
+
+    public String getPermissionIcon() {
+        return permissionIcon;
+    }
+
+    public void setPermissionIcon(String permissionIcon) {
+        this.permissionIcon = permissionIcon;
+    }
+
+    public Integer getSort() {
+        return sort;
+    }
+
+    public void setSort(Integer sort) {
+        this.sort = sort;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Integer getVisible() {
+        return visible;
+    }
+
+    public void setVisible(Integer visible) {
+        this.visible = visible;
+    }
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    public String getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(String createBy) {
+        this.createBy = createBy;
+    }
+
+    public String getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(String updateBy) {
+        this.updateBy = updateBy;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
 }

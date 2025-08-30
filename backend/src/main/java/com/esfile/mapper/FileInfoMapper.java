@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 文件信息Mapper接口
@@ -125,4 +126,101 @@ public interface FileInfoMapper {
      * @return 影响行数
      */
     int updatePreviewCount(@Param("id") Long id);
+    
+    /**
+     * 根据关键词搜索文件
+     * 
+     * @param keyword 关键词
+     * @return 文件信息列表
+     */
+    List<FileInfo> searchByKeyword(@Param("keyword") String keyword);
+    
+    /**
+     * 根据标签查询文件
+     * 
+     * @param tag 标签
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectByTag(@Param("tag") String tag);
+    
+    /**
+     * 根据文件夹ID查询文件
+     * 
+     * @param folderId 文件夹ID
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectByFolderId(@Param("folderId") Long folderId);
+    
+    /**
+     * 根据状态查询文件
+     * 
+     * @param status 文件状态
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectByStatus(@Param("status") Integer status);
+    
+    /**
+     * 根据创建时间范围查询文件
+     * 
+     * @param startTime 开始时间
+     * @param endTime 结束时间
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectByCreateTimeRange(@Param("startTime") String startTime, @Param("endTime") String endTime);
+    
+    /**
+     * 根据文件大小范围查询文件
+     * 
+     * @param minSize 最小大小
+     * @param maxSize 最大大小
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectBySizeRange(@Param("minSize") Long minSize, @Param("maxSize") Long maxSize);
+    
+    /**
+     * 批量删除文件
+     * 
+     * @param ids 文件ID列表
+     * @return 影响行数
+     */
+    int batchDeleteByIds(@Param("ids") List<Long> ids);
+    
+    /**
+     * 批量更新文件状态
+     * 
+     * @param ids 文件ID列表
+     * @param status 状态
+     * @return 影响行数
+     */
+    int batchUpdateStatus(@Param("ids") List<Long> ids, @Param("status") Integer status);
+    
+    /**
+     * 获取文件类型统计
+     * 
+     * @return 文件类型统计列表
+     */
+    List<Map<String, Object>> selectFileTypeStats();
+    
+    /**
+     * 获取存储使用统计
+     * 
+     * @return 存储使用统计
+     */
+    Map<String, Object> selectStorageUsageStats();
+    
+    /**
+     * 查找重复文件
+     * 
+     * @return 重复文件列表
+     */
+    List<Map<String, Object>> selectDuplicateFiles();
+    
+    /**
+     * 根据权限查询文件
+     * 
+     * @param userId 用户ID
+     * @param permission 权限
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectByPermission(@Param("userId") Long userId, @Param("permission") String permission);
 }

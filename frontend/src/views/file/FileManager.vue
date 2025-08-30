@@ -57,14 +57,14 @@
           @click="toggleFileSelection(file.id)"
         >
           <div class="file-icon">
-            <el-icon :size="48" :color="getFileIconColor(file.type)">
-              <component :is="getFileIcon(file.type)" />
+            <el-icon :size="48" :color="getFileIconColor(file.fileType)">
+              <component :is="getFileIcon(file.fileType)" />
             </el-icon>
           </div>
           <div class="file-info">
-            <div class="file-name" :title="file.name">{{ file.name }}</div>
+            <div class="file-name" :title="file.fileName">{{ file.fileName }}</div>
             <div class="file-meta">
-              <span class="file-size">{{ formatFileSize(file.size) }}</span>
+              <span class="file-size">{{ formatFileSize(file.fileSize) }}</span>
               <span class="file-date">{{ formatTime(file.createTime) }}</span>
             </div>
           </div>
@@ -108,25 +108,25 @@
           <el-table-column label="文件名" min-width="200">
             <template #default="{ row }">
               <div class="file-name-cell">
-                <el-icon :color="getFileIconColor(row.type)" class="file-icon-small">
-                  <component :is="getFileIcon(row.type)" />
+                <el-icon :color="getFileIconColor(row.fileType)" class="file-icon-small">
+                  <component :is="getFileIcon(row.fileType)" />
                 </el-icon>
-                <span>{{ row.name }}</span>
+                <span>{{ row.fileName }}</span>
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="size" label="大小" width="120">
+          <el-table-column prop="fileSize" label="大小" width="120">
             <template #default="{ row }">
-              {{ formatFileSize(row.size) }}
+              {{ formatFileSize(row.fileSize) }}
             </template>
           </el-table-column>
-          <el-table-column prop="type" label="类型" width="100" />
+          <el-table-column prop="fileType" label="类型" width="100" />
           <el-table-column prop="createTime" label="上传时间" width="180">
             <template #default="{ row }">
               {{ formatTime(row.createTime) }}
             </template>
           </el-table-column>
-          <el-table-column prop="uploader" label="上传者" width="120" />
+          <el-table-column prop="uploadUserName" label="上传者" width="120" />
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <el-button type="text" size="small" @click="previewFile(row)">
@@ -586,7 +586,7 @@ onMounted(() => {
 
 // 响应式设计
 @media (max-width: $breakpoint-md) {
-  .file-manager {
+.file-manager {
     .file-grid {
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: $spacing-sm;

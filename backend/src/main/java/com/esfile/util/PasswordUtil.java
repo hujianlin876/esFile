@@ -1,26 +1,18 @@
 package com.esfile.util;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Component;
 
 /**
  * 密码工具类
- * 
- * @author esfile
- * @since 2024-01-01
  */
-@Component
 public class PasswordUtil {
     
     private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     
     /**
      * 加密密码
-     * 
-     * @param rawPassword 原始密码
-     * @return 加密后的密码
      */
-    public static String encode(String rawPassword) {
+    public static String encrypt(String rawPassword) {
         if (rawPassword == null || rawPassword.trim().isEmpty()) {
             throw new IllegalArgumentException("密码不能为空");
         }
@@ -29,10 +21,6 @@ public class PasswordUtil {
     
     /**
      * 验证密码
-     * 
-     * @param rawPassword 原始密码
-     * @param encodedPassword 加密后的密码
-     * @return 是否匹配
      */
     public static boolean matches(String rawPassword, String encodedPassword) {
         if (rawPassword == null || encodedPassword == null) {
@@ -43,13 +31,10 @@ public class PasswordUtil {
     
     /**
      * 生成随机密码
-     * 
-     * @param length 密码长度
-     * @return 随机密码
      */
     public static String generateRandomPassword(int length) {
-        if (length <= 0) {
-            length = 8;
+        if (length < 6) {
+            length = 6;
         }
         
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -61,5 +46,33 @@ public class PasswordUtil {
         }
         
         return password.toString();
+    }
+    
+    /**
+     * 检查密码强度
+     */
+    public static boolean isStrongPassword(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        
+        boolean hasUpper = false;
+        boolean hasLower = false;
+        boolean hasDigit = false;
+        boolean hasSpecial = false;
+        
+        for (char c : password.toCharArray()) {
+            if (Character.isUpperCase(c)) {
+                hasUpper = true;
+            } else if (Character.isLowerCase(c)) {
+                hasLower = true;
+            } else if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else {
+                hasSpecial = true;
+            }
+        }
+        
+        return hasUpper && hasLower && hasDigit && hasSpecial;
     }
 }

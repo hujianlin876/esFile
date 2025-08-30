@@ -54,6 +54,11 @@ public class FileInfo extends BaseEntity {
     private String fileMd5;
     
     /**
+     * 父级文件夹ID
+     */
+    private Long parentFolderId;
+    
+    /**
      * 上传用户ID
      */
     private Long uploadUserId;

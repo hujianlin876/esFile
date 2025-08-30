@@ -102,8 +102,8 @@
             <el-button type="text" size="small" @click="deletePermission(row)">
               删除
             </el-button>
-          </template>
-        </el-table-column>
+        </template>
+      </el-table-column>
       </el-table>
     </el-card>
     

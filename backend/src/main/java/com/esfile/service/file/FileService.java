@@ -1,134 +1,191 @@
 package com.esfile.service.file;
 
-import com.esfile.common.vo.PageResult;
+import com.esfile.entity.dto.FileSearchDto;
+import com.esfile.entity.dto.FileUploadDto;
 import com.esfile.entity.mybatis.FileInfo;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
- * 文件服务接口
- * 
- * @author esfile
- * @since 2024-01-01
+ * 文件管理服务接口
  */
 public interface FileService {
-    
+
     /**
-     * 上传文件
-     * 
-     * @param file 文件
-     * @param userId 上传用户ID
-     * @param description 文件描述
-     * @param tags 标签
-     * @param isPublic 是否公开
-     * @return 文件信息
+     * 获取文件列表（分页）
      */
-    FileInfo uploadFile(MultipartFile file, Long userId, String description, String tags, Integer isPublic);
-    
+    Map<String, Object> getFileList(FileSearchDto searchDto);
+
+    /**
+     * 根据ID获取文件详情
+     */
+    FileInfo getFileDetail(Long id);
+
+    /**
+     * 上传单个文件
+     */
+    FileInfo uploadFile(FileUploadDto uploadDto);
+
     /**
      * 批量上传文件
-     * 
-     * @param files 文件列表
-     * @param userId 上传用户ID
-     * @param description 文件描述
-     * @param tags 标签
-     * @param isPublic 是否公开
-     * @return 文件信息列表
      */
-    List<FileInfo> batchUploadFiles(List<MultipartFile> files, Long userId, String description, String tags, Integer isPublic);
-    
+    List<FileInfo> batchUploadFiles(List<FileUploadDto> uploadDtos);
+
     /**
      * 下载文件
-     * 
-     * @param fileId 文件ID
-     * @param response HTTP响应
-     * @throws IOException IO异常
      */
-    void downloadFile(Long fileId, HttpServletResponse response) throws IOException;
-    
+    void downloadFile(Long id, HttpServletResponse response);
+
+    /**
+     * 批量下载文件
+     */
+    void batchDownloadFiles(List<Long> ids, HttpServletResponse response);
+
     /**
      * 删除文件
-     * 
-     * @param fileId 文件ID
-     * @param userId 操作用户ID
-     * @return 是否成功
      */
-    boolean deleteFile(Long fileId, Long userId);
-    
+    boolean deleteFile(Long id, Long userId);
+
     /**
-     * 根据ID查询文件信息
-     * 
-     * @param fileId 文件ID
-     * @return 文件信息
+     * 批量删除文件
      */
-    FileInfo getFileById(Long fileId);
-    
-    /**
-     * 分页查询文件
-     * 
-     * @param page 页码
-     * @param size 每页大小
-     * @param fileName 文件名
-     * @param fileType 文件类型
-     * @param uploadUserId 上传用户ID
-     * @return 分页结果
-     */
-    PageResult<FileInfo> getFilePage(int page, int size, String fileName, String fileType, Long uploadUserId);
-    
-    /**
-     * 根据条件查询文件
-     * 
-     * @param fileInfo 查询条件
-     * @return 文件列表
-     */
-    List<FileInfo> getFilesByCondition(FileInfo fileInfo);
-    
+    boolean batchDeleteFiles(List<Long> ids, Long userId);
+
     /**
      * 更新文件信息
-     * 
-     * @param fileInfo 文件信息
-     * @return 是否成功
      */
-    boolean updateFileInfo(FileInfo fileInfo);
-    
+    FileInfo updateFile(FileInfo fileInfo);
+
     /**
-     * 更新下载次数
-     * 
-     * @param fileId 文件ID
+     * 移动文件
      */
-    void updateDownloadCount(Long fileId);
-    
+    boolean moveFile(Long id, Long targetFolderId, Long userId);
+
     /**
-     * 更新预览次数
-     * 
-     * @param fileId 文件ID
+     * 复制文件
      */
-    void updatePreviewCount(Long fileId);
-    
+    FileInfo copyFile(Long id, Long targetFolderId, Long userId);
+
     /**
-     * 检查文件是否存在
-     * 
-     * @param fileMd5 文件MD5值
-     * @return 是否存在
+     * 获取文件预览信息
      */
-    boolean isFileExists(String fileMd5);
-    
+    Map<String, Object> getFilePreview(Long id);
+
     /**
-     * 获取文件预览URL
-     * 
-     * @param fileId 文件ID
-     * @return 预览URL
+     * 获取文件内容（文本文件）
      */
-    String getFilePreviewUrl(Long fileId);
-    
+    String getFileContent(Long id);
+
     /**
-     * 获取文件下载URL
-     * 
-     * @param fileId 文件ID
-     * @return 下载URL
+     * 获取文件缩略图
      */
-    String getFileDownloadUrl(Long fileId);
+    byte[] getFileThumbnail(Long id);
+
+    /**
+     * 搜索文件
+     */
+    Map<String, Object> searchFiles(FileSearchDto searchDto);
+
+    /**
+     * 获取文件统计信息
+     */
+    Map<String, Object> getFileStats();
+
+    /**
+     * 获取文件夹结构
+     */
+    List<Map<String, Object>> getFolderStructure(Long parentId);
+
+    /**
+     * 创建文件夹
+     */
+    FileInfo createFolder(String folderName, Long parentId, Long userId);
+
+    /**
+     * 删除文件夹
+     */
+    boolean deleteFolder(Long folderId, Long userId);
+
+    /**
+     * 获取文件类型统计
+     */
+    List<Map<String, Object>> getFileTypeStats();
+
+    /**
+     * 获取存储使用统计
+     */
+    Map<String, Object> getStorageUsageStats();
+
+    /**
+     * 文件去重
+     */
+    List<Map<String, Object>> findDuplicateFiles();
+
+    /**
+     * 清理临时文件
+     */
+    boolean cleanupTempFiles();
+
+    /**
+     * 文件备份
+     */
+    boolean backupFile(Long id);
+
+    /**
+     * 文件恢复
+     */
+    boolean restoreFile(Long id);
+
+    /**
+     * 获取文件访问日志
+     */
+    List<Map<String, Object>> getFileAccessLogs(Long fileId, int page, int size);
+
+    /**
+     * 设置文件权限
+     */
+    boolean setFilePermission(Long fileId, Long userId, String permission);
+
+    /**
+     * 获取文件权限
+     */
+    Map<String, Object> getFilePermission(Long fileId);
+
+    /**
+     * 文件分享
+     */
+    Map<String, Object> shareFile(Long fileId, Long userId, String shareType, Integer expireDays);
+
+    /**
+     * 取消文件分享
+     */
+    boolean cancelFileShare(Long shareId, Long userId);
+
+    /**
+     * 获取分享文件列表
+     */
+    List<Map<String, Object>> getSharedFiles(Long userId);
+
+    /**
+     * 文件标签管理
+     */
+    boolean addFileTag(Long fileId, String tag);
+
+    /**
+     * 移除文件标签
+     */
+    boolean removeFileTag(Long fileId, String tag);
+
+    /**
+     * 获取文件标签
+     */
+    List<String> getFileTags(Long fileId);
+
+    /**
+     * 根据标签搜索文件
+     */
+    List<FileInfo> getFilesByTag(String tag);
 }

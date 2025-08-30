@@ -1,128 +1,66 @@
 package com.esfile.service.system;
 
-import com.esfile.common.vo.PageResult;
 import com.esfile.entity.mybatis.Permission;
-
 import java.util.List;
+import java.util.Map;
 
 /**
- * 权限服务接口
- * 
- * @author esfile
- * @since 2024-01-01
+ * 权限管理服务接口
  */
 public interface PermissionService {
-    
+
     /**
-     * 创建权限
-     * 
-     * @param permission 权限信息
-     * @return 是否成功
+     * 获取权限列表
      */
-    boolean createPermission(Permission permission);
-    
+    List<Permission> getPermissionList();
+
     /**
-     * 更新权限
-     * 
-     * @param permission 权限信息
-     * @return 是否成功
-     */
-    boolean updatePermission(Permission permission);
-    
-    /**
-     * 删除权限
-     * 
-     * @param id 权限ID
-     * @return 是否成功
-     */
-    boolean deletePermission(Long id);
-    
-    /**
-     * 根据ID查询权限
-     * 
-     * @param id 权限ID
-     * @return 权限信息
+     * 根据ID获取权限
      */
     Permission getPermissionById(Long id);
-    
+
     /**
-     * 根据权限编码查询权限
-     * 
-     * @param permissionCode 权限编码
-     * @return 权限信息
+     * 创建权限
      */
-    Permission getPermissionByCode(String permissionCode);
-    
+    Permission createPermission(Permission permission);
+
     /**
-     * 查询所有权限
-     * 
-     * @return 权限列表
+     * 更新权限
      */
-    List<Permission> getAllPermissions();
-    
+    Permission updatePermission(Permission permission);
+
     /**
-     * 分页查询权限
-     * 
-     * @param page 页码
-     * @param size 每页大小
-     * @return 分页结果
+     * 删除权限
      */
-    PageResult<Permission> getPermissionPage(int page, int size);
-    
+    boolean deletePermission(Long id);
+
     /**
-     * 根据父级权限ID查询权限列表
-     * 
-     * @param parentId 父级权限ID
-     * @return 权限列表
+     * 批量删除权限
      */
-    List<Permission> getPermissionsByParentId(Long parentId);
-    
+    boolean batchDeletePermissions(List<Long> ids);
+
     /**
-     * 根据权限类型查询权限列表
-     * 
-     * @param permissionType 权限类型
-     * @return 权限列表
+     * 获取权限树结构
      */
-    List<Permission> getPermissionsByType(Integer permissionType);
-    
+    List<Map<String, Object>> getPermissionTree();
+
     /**
-     * 根据角色ID查询权限列表
-     * 
-     * @param roleId 角色ID
-     * @return 权限列表
+     * 根据角色ID获取权限列表
      */
     List<Permission> getPermissionsByRoleId(Long roleId);
-    
+
     /**
-     * 根据用户ID查询权限列表
-     * 
-     * @param userId 用户ID
-     * @return 权限列表
+     * 根据用户ID获取权限列表
      */
-    List<Permission> getPermissionsByUserId(Long userId);
-    
-    /**
-     * 查询权限树
-     * 
-     * @return 权限树
-     */
-    List<Permission> getPermissionTree();
-    
+    List<String> getPermissionsByUserId(Long userId);
+
     /**
      * 检查权限编码是否存在
-     * 
-     * @param permissionCode 权限编码
-     * @param excludeId 排除的权限ID
-     * @return 是否存在
      */
-    boolean isPermissionCodeExists(String permissionCode, Long excludeId);
-    
+    boolean isPermissionCodeExists(String permissionCode);
+
     /**
-     * 检查用户是否有指定权限
-     * 
-     * @param userId 用户ID
-     * @param permissionCode 权限编码
-     * @return 是否有权限
+     * 获取菜单权限
      */
-    boolean hasPermission(Long userId, String permissionCode);
+    List<Map<String, Object>> getMenuPermissions();
 }

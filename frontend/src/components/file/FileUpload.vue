@@ -86,6 +86,10 @@ interface Props {
   limit?: number
   autoUpload?: boolean
   tip?: string
+  description?: string
+  tags?: string
+  isPublic?: number
+  parentFolderId?: number
 }
 
 interface Emits {
@@ -103,7 +107,11 @@ const props = withDefaults(defineProps<Props>(), {
   drag: true,
   accept: '.jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip,.rar',
   limit: 10,
-  autoUpload: true
+  autoUpload: true,
+  description: '',
+  tags: '',
+  isPublic: 0,
+  parentFolderId: undefined
 })
 
 const emit = defineEmits<Emits>()
@@ -115,6 +123,26 @@ const uploadProgress = ref<UploadProgress[]>([])
 
 // 计算属性
 const showProgress = computed(() => !props.autoUpload || uploadProgress.value.length > 0)
+
+// 构建上传数据
+const uploadData = computed(() => {
+  const data: Record<string, any> = {}
+  
+  if (props.description) {
+    data.description = props.description
+  }
+  if (props.tags) {
+    data.tags = props.tags
+  }
+  if (props.isPublic !== undefined) {
+    data.isPublic = props.isPublic
+  }
+  if (props.parentFolderId) {
+    data.parentFolderId = props.parentFolderId
+  }
+  
+  return data
+})
 
 // 方法
 const beforeUpload = (file: File) => {
