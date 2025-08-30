@@ -1,0 +1,99 @@
+@import './variables.scss';
+@import './common.scss';
+
+// 全局样式
+#app {
+  height: 100%;
+  font-family: $font-family;
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $border-lighter;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-color;
+  border-radius: 3px;
+  
+  &:hover {
+    background: $text-secondary;
+  }
+}
+
+// Element Plus 样式覆盖
+.el-button {
+  border-radius: $border-radius-base;
+}
+
+.el-input__inner {
+  border-radius: $border-radius-base;
+}
+
+.el-table {
+  border-radius: $border-radius-base;
+  
+  th {
+    background-color: $background-color;
+  }
+}
+
+.el-pagination {
+  text-align: center;
+  margin-top: $spacing-lg;
+}
+
+.el-card {
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-light;
+  
+  .el-card__header {
+    border-bottom: 1px solid $border-lighter;
+    padding: $spacing-md $spacing-lg;
+  }
+  
+  .el-card__body {
+    padding: $spacing-lg;
+  }
+}
+
+.el-dialog {
+  border-radius: $border-radius-large;
+  
+  .el-dialog__header {
+    border-bottom: 1px solid $border-lighter;
+    padding: $spacing-md $spacing-lg;
+  }
+  
+  .el-dialog__body {
+    padding: $spacing-lg;
+  }
+  
+  .el-dialog__footer {
+    border-top: 1px solid $border-lighter;
+    padding: $spacing-md $spacing-lg;
+  }
+}
+
+.el-form {
+  .el-form-item__label {
+    font-weight: $font-weight-primary;
+    color: $text-primary;
+  }
+  
+  .el-form-item__content {
+    .el-input__inner {
+      border-color: $border-color;
+      
+      &:focus {
+        border-color: $primary-color;
+      }
+    }
+  }
+}

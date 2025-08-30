@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.esfile.mapper.FileInfoMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.esfile.entity.mybatis.FileInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="file_name" property="fileName" jdbcType="VARCHAR"/>
+        <result column="original_file_name" property="originalFileName" jdbcType="VARCHAR"/>
+        <result column="file_path" property="filePath" jdbcType="VARCHAR"/>
+        <result column="file_url" property="fileUrl" jdbcType="VARCHAR"/>
+        <result column="file_size" property="fileSize" jdbcType="BIGINT"/>
+        <result column="file_type" property="fileType" jdbcType="VARCHAR"/>
+        <result column="file_extension" property="fileExtension" jdbcType="VARCHAR"/>
+        <result column="file_md5" property="fileMd5" jdbcType="VARCHAR"/>
+        <result column="upload_user_id" property="uploadUserId" jdbcType="BIGINT"/>
+        <result column="upload_user_name" property="uploadUserName" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="is_public" property="isPublic" jdbcType="INTEGER"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="tags" property="tags" jdbcType="VARCHAR"/>
+        <result column="download_count" property="downloadCount" jdbcType="INTEGER"/>
+        <result column="preview_count" property="previewCount" jdbcType="INTEGER"/>
+        <result column="bucket_name" property="bucketName" jdbcType="VARCHAR"/>
+        <result column="object_name" property="objectName" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="deleted" property="deleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, file_name, original_file_name, file_path, file_url, file_size, file_type, file_extension,
+        file_md5, upload_user_id, upload_user_name, status, is_public, description, tags,
+        download_count, preview_count, bucket_name, object_name,
+        create_time, update_time, deleted
+    </sql>
+
+    <!-- 插入文件信息 -->
+    <insert id="insert" parameterType="com.esfile.entity.mybatis.FileInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO file_info (
+            file_name, original_file_name, file_path, file_url, file_size, file_type, file_extension,
+            file_md5, upload_user_id, upload_user_name, status, is_public, description, tags,
+            download_count, preview_count, bucket_name, object_name,
+            create_time, update_time, deleted
+        ) VALUES (
+            #{fileName}, #{originalFileName}, #{filePath}, #{fileUrl}, #{fileSize}, #{fileType}, #{fileExtension},
+            #{fileMd5}, #{uploadUserId}, #{uploadUserName}, #{status}, #{isPublic}, #{description}, #{tags},
+            #{downloadCount}, #{previewCount}, #{bucketName}, #{objectName},
+            NOW(), NOW(), 0
+        )
+    </insert>
+
+    <!-- 根据ID更新文件信息 -->
+    <update id="updateById" parameterType="com.esfile.entity.mybatis.FileInfo">
+        UPDATE file_info
+        SET file_name = #{fileName},
+            original_file_name = #{originalFileName},
+            file_path = #{filePath},
+            file_url = #{fileUrl},
+            file_size = #{fileSize},
+            file_type = #{fileType},
+            file_extension = #{fileExtension},
+            file_md5 = #{fileMd5},
+            upload_user_id = #{uploadUserId},
+            upload_user_name = #{uploadUserName},
+            status = #{status},
+            is_public = #{isPublic},
+            description = #{description},
+            tags = #{tags},
+            download_count = #{downloadCount},
+            preview_count = #{previewCount},
+            bucket_name = #{bucketName},
+            object_name = #{objectName},
+            update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 根据ID删除文件信息 -->
+    <update id="deleteById" parameterType="java.lang.Long">
+        UPDATE file_info SET deleted = 1, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID查询文件信息 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <!-- 根据文件名查询文件信息 -->
+    <select id="selectByFileName" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE file_name LIKE CONCAT('%', #{fileName}, '%') AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据文件类型查询文件信息 -->
+    <select id="selectByFileType" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE file_type = #{fileType} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据上传用户ID查询文件信息 -->
+    <select id="selectByUploadUserId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE upload_user_id = #{uploadUserId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据MD5值查询文件信息 -->
+    <select id="selectByFileMd5" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE file_md5 = #{fileMd5} AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 查询所有文件信息 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 分页查询文件信息 -->
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        WHERE deleted = 0
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询文件信息总数 -->
+    <select id="selectCount" resultType="long">
+        SELECT COUNT(*)
+        FROM file_info
+        WHERE deleted = 0
+    </select>
+
+    <!-- 根据条件查询文件信息 -->
+    <select id="selectByCondition" parameterType="com.esfile.entity.mybatis.FileInfo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM file_info
+        <where>
+            deleted = 0
+            <if test="fileName != null and fileName != ''">
+                AND file_name LIKE CONCAT('%', #{fileName}, '%')
+            </if>
+            <if test="fileType != null and fileType != ''">
+                AND file_type = #{fileType}
+            </if>
+            <if test="uploadUserId != null">
+                AND upload_user_id = #{uploadUserId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="isPublic != null">
+                AND is_public = #{isPublic}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 更新下载次数 -->
+    <update id="updateDownloadCount" parameterType="java.lang.Long">
+        UPDATE file_info 
+        SET download_count = download_count + 1, update_time = NOW() 
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <!-- 更新预览次数 -->
+    <update id="updatePreviewCount" parameterType="java.lang.Long">
+        UPDATE file_info 
+        SET preview_count = preview_count + 1, update_time = NOW() 
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+</mapper>
