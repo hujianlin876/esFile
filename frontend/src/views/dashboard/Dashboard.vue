@@ -81,7 +81,7 @@ import ChartCard from '@/components/dashboard/ChartCard.vue'
 import ActivityList from '@/components/dashboard/ActivityList.vue'
 import { getPieChartOption, getLineChartOption } from '@/utils/chart'
 import { formatFileSize } from '@/utils/format'
-import { getDashboardStats, getChartData, getRecentActivities } from '@/services/dashboard'
+import { getDashboardStats, getChartData, getRecentActivities } from '@/api/dashboard/dashboard'
 import type { DashboardStats, ChartData, Activity } from '@/services/dashboard'
 
 // 响应式数据
@@ -89,40 +89,60 @@ const stats = ref<DashboardStats>({
   totalFiles: 0,
   totalUsers: 0,
   totalSize: 0,
-  todayUploads: 0
+  recentUploads: 0,
+  recentDownloads: 0,
+  activeUsers: 0
 })
 
-const trendPeriod = ref('7')
-const recentActivities = ref<Activity[]>([])
 const chartData = ref<ChartData>({
-  pieData: [],
-  lineData: { dates: [], values: [] }
+  fileTypeDistribution: [],
+  uploadTrends: { dates: [], values: [] },
+  userActivity: [],
+  storageUsage: { used: 0, total: 0, percentage: 0 }
 })
+
+const activities = ref<Activity[]>([])
+const loading = ref(false)
+const selectedPeriod = ref<'day' | 'week' | 'month'>('week')
 
 // 计算属性
-const pieChartOption = computed(() => getPieChartOption(chartData.value.pieData))
-const lineChartOption = computed(() => getLineChartOption(chartData.value.lineData))
+const pieChartOption = computed(() => getPieChartOption(chartData.value.fileTypeDistribution))
+const lineChartOption = computed(() => getLineChartOption(chartData.value.uploadTrends))
 
 // 方法
-const loadStats = async () => {
+const loadData = async () => {
+  loading.value = true
   try {
-    stats.value = await getDashboardStats()
+    const [statsRes, chartRes, activitiesRes] = await Promise.all([
+      getDashboardStats(),
+      getChartData(selectedPeriod.value),
+      getRecentActivities(10)
+    ])
+    
+    stats.value = statsRes.data
+    chartData.value = chartRes.data
+    activities.value = activitiesRes.data
   } catch (error) {
-    ElMessage.error('加载统计数据失败')
+    ElMessage.error('加载数据失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const loadChartData = async () => {
+// 周期变化处理
+const handlePeriodChange = async (period: 'day' | 'week' | 'month') => {
+  selectedPeriod.value = period
   try {
-    chartData.value = await getChartData()
+    const response = await getChartData(period)
+    chartData.value = response.data
   } catch (error) {
-    ElMessage.error('加载图表数据失败')
+    ElMessage.error('更新趋势图失败')
   }
 }
 
 const loadRecentActivities = async () => {
   try {
-    recentActivities.value = await getRecentActivities()
+    activities.value = await getRecentActivities()
   } catch (error) {
     ElMessage.error('加载活动记录失败')
   }
@@ -130,21 +150,17 @@ const loadRecentActivities = async () => {
 
 const updateTrendChart = () => {
   // TODO: 根据选择的周期更新趋势图
-  loadChartData()
+  loadData()
 }
 
 const refreshChartData = () => {
-  loadChartData()
+  loadData()
   ElMessage.success('图表数据已刷新')
 }
 
 // 生命周期
-onMounted(async () => {
-  await Promise.all([
-    loadStats(),
-    loadChartData(),
-    loadRecentActivities()
-  ])
+onMounted(() => {
+  loadData()
 })
 </script>
 

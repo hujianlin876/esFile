@@ -1,0 +1,118 @@
+.database-manager {
+  .page-header {
+    margin-bottom: $spacing-xl;
+    
+    .page-title {
+      font-size: $font-size-extra-large;
+      font-weight: bold;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .page-desc {
+      color: $text-secondary;
+      margin: 0;
+    }
+  }
+  
+  .status-card {
+    .status-content {
+      display: flex;
+      align-items: center;
+      gap: $spacing-lg;
+      
+      .status-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .el-icon {
+          font-size: 28px;
+        }
+      }
+      
+      .status-info {
+        .status-number {
+          font-size: $font-size-extra-large;
+          font-weight: bold;
+          color: $text-primary;
+          margin-bottom: $spacing-xs;
+        }
+        
+        .status-label {
+          font-size: $font-size-base;
+          color: $text-secondary;
+        }
+      }
+    }
+  }
+  
+  .sql-executor,
+  .result-card,
+  .sql-templates {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      .header-actions {
+        display: flex;
+        gap: $spacing-sm;
+      }
+    }
+  }
+  
+  .result-info {
+    .result-stats {
+      display: flex;
+      gap: $spacing-lg;
+      margin-bottom: $spacing-md;
+      color: $text-regular;
+      font-size: $font-size-small;
+    }
+  }
+  
+  .result-table {
+    margin-top: $spacing-md;
+  }
+  
+  .error-info {
+    margin-top: $spacing-md;
+  }
+  
+  .template-card {
+    .template-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      code {
+        background: $background-light;
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-base;
+        font-family: 'Courier New', monospace;
+        font-size: $font-size-extra-small;
+        color: $text-primary;
+      }
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: $breakpoint-md) {
+  .database-manager {
+    .status-card .status-content {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .template-card .template-content {
+      flex-direction: column;
+      gap: $spacing-sm;
+      align-items: stretch;
+    }
+  }
+}

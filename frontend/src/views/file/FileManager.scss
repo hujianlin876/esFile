@@ -1,0 +1,131 @@
+.file-manager {
+  .page-header {
+    margin-bottom: $spacing-xl;
+    
+    .page-title {
+      font-size: $font-size-extra-large;
+      font-weight: bold;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .page-desc {
+      color: $text-secondary;
+      margin: 0;
+    }
+  }
+  
+  .upload-card {
+    margin-bottom: $spacing-lg;
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+  
+  .file-content {
+    margin-bottom: $spacing-lg;
+    
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: $spacing-md;
+      
+      .file-item {
+        background: $background-white;
+        border: 1px solid $border-color;
+        border-radius: $border-radius-base;
+        padding: $spacing-md;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          border-color: $primary-color;
+          box-shadow: $box-shadow-light;
+        }
+        
+        &.selected {
+          border-color: $primary-color;
+          background-color: rgba($primary-color, 0.1);
+        }
+        
+        .file-icon {
+          text-align: center;
+          margin-bottom: $spacing-sm;
+        }
+        
+        .file-info {
+          text-align: center;
+          margin-bottom: $spacing-sm;
+          
+          .file-name {
+            font-size: $font-size-small;
+            color: $text-primary;
+            margin-bottom: $spacing-xs;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          .file-meta {
+            font-size: $font-size-extra-small;
+            color: $text-secondary;
+            
+            .file-size {
+              margin-right: $spacing-sm;
+            }
+          }
+        }
+        
+        .file-actions {
+          display: flex;
+          justify-content: center;
+          gap: $spacing-xs;
+        }
+      }
+    }
+    
+    .file-list {
+      .file-name-cell {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        
+        .file-icon-small {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+  
+  .pagination-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: $spacing-lg;
+  }
+}
+
+// 响应式设计
+@media (max-width: $breakpoint-md) {
+  .file-manager {
+    .file-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: $spacing-sm;
+      
+      .file-item {
+        padding: $spacing-sm;
+        
+        .file-info .file-name {
+          font-size: $font-size-extra-small;
+        }
+        
+        .file-actions {
+          flex-direction: column;
+          gap: $spacing-xs;
+        }
+      }
+    }
+  }
+}

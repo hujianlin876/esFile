@@ -204,7 +204,7 @@ import FileUpload from '@/components/file/FileUpload.vue'
 import FileSearch from '@/components/file/FileSearch.vue'
 import FileToolbar from '@/components/file/FileToolbar.vue'
 import { formatFileSize, formatTime } from '@/utils/format'
-import { getFileList, deleteFile as deleteFileApi } from '@/api/file/file'
+import { getFileList, deleteFile as deleteFileApi, batchDeleteFiles, batchDownloadFiles } from '@/api/file/file'
 import type { FileInfo } from '@/api/types/file'
 
 // 响应式数据
@@ -227,7 +227,9 @@ const searchParams = reactive({
   dateRange: '',
   sizeRange: '',
   uploader: '',
-  tags: []
+  tags: [],
+  sortBy: '', // 新增排序字段
+  sortOrder: '' // 新增排序顺序
 })
 
 // 计算属性
@@ -264,7 +266,9 @@ const handleSearchReset = () => {
     dateRange: '',
     sizeRange: '',
     uploader: '',
-    tags: []
+    tags: [],
+    sortBy: '', // 重置排序字段
+    sortOrder: '' // 重置排序顺序
   })
   currentPage.value = 1
   loadFiles()
@@ -296,11 +300,37 @@ const handleSelectionChange = (selection: FileInfo[]) => {
   selectedFiles.value = selection.map(item => item.id)
 }
 
-const handleBatchDownload = () => {
-  ElMessage.info('批量下载功能开发中...')
+const handleBatchDownload = async () => {
+  if (selectedFiles.value.length === 0) {
+    ElMessage.warning('请先选择要下载的文件')
+    return
+  }
+  
+  try {
+    const response = await batchDownloadFiles(selectedFiles.value)
+    // 创建下载链接
+    const blob = new Blob([response.data])
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = `批量下载_${new Date().toISOString().slice(0, 10)}.zip`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(downloadUrl)
+    
+    ElMessage.success('批量下载成功')
+  } catch (error) {
+    ElMessage.error('批量下载失败')
+  }
 }
 
 const handleBatchDelete = async () => {
+  if (selectedFiles.value.length === 0) {
+    ElMessage.warning('请先选择要删除的文件')
+    return
+  }
+  
   try {
     await ElMessageBox.confirm(
       `确定要删除选中的 ${selectedFiles.value.length} 个文件吗？`,
@@ -312,18 +342,28 @@ const handleBatchDelete = async () => {
       }
     )
     
-    // TODO: 调用批量删除API
+    await batchDeleteFiles(selectedFiles.value)
     ElMessage.success('批量删除成功')
     selectedFiles.value = []
     loadFiles()
-  } catch {
-    // 用户取消
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      ElMessage.error('批量删除失败')
+    }
   }
 }
 
-const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
-  // TODO: 实现排序逻辑
-  ElMessage.info(`按${sortBy}${sortOrder === 'asc' ? '升序' : '降序'}排序`)
+const handleSort = async (sortBy: string, sortOrder: 'asc' | 'desc') => {
+  try {
+    // 更新搜索参数并重新加载
+    searchParams.sortBy = sortBy
+    searchParams.sortOrder = sortOrder
+    currentPage.value = 1
+    await loadFiles()
+    ElMessage.success(`已按${sortBy}${sortOrder === 'asc' ? '升序' : '降序'}排序`)
+  } catch (error) {
+    ElMessage.error('排序失败')
+  }
 }
 
 const previewFile = (file: FileInfo) => {
@@ -367,12 +407,39 @@ const handleCurrentChange = (page: number) => {
   loadFiles()
 }
 
-const saveSettings = () => {
-  // TODO: 保存设置到localStorage或API
-  viewMode.value = defaultViewMode.value
-  pageSize.value = defaultPageSize.value
-  showSettings.value = false
-  ElMessage.success('设置保存成功')
+const saveSettings = async () => {
+  try {
+    // 保存设置到localStorage
+    localStorage.setItem('fileManagerSettings', JSON.stringify({
+      defaultViewMode: defaultViewMode.value,
+      defaultPageSize: defaultPageSize.value
+    }))
+    
+    // 应用设置
+    viewMode.value = defaultViewMode.value
+    pageSize.value = defaultPageSize.value
+    showSettings.value = false
+    
+    ElMessage.success('设置保存成功')
+  } catch (error) {
+    ElMessage.error('设置保存失败')
+  }
+}
+
+// 加载设置
+const loadSettings = () => {
+  try {
+    const settings = localStorage.getItem('fileManagerSettings')
+    if (settings) {
+      const { defaultViewMode: savedViewMode, defaultPageSize: savedPageSize } = JSON.parse(settings)
+      defaultViewMode.value = savedViewMode || 'grid'
+      defaultPageSize.value = savedPageSize || 20
+      viewMode.value = defaultViewMode.value
+      pageSize.value = defaultPageSize.value
+    }
+  } catch (error) {
+    console.error('加载设置失败:', error)
+  }
 }
 
 // 文件图标和颜色
@@ -402,6 +469,7 @@ const getFileIconColor = (type: string) => {
 
 // 生命周期
 onMounted(() => {
+  loadSettings()
   loadFiles()
 })
 </script>

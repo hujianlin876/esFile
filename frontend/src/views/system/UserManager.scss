@@ -1,0 +1,63 @@
+.user-manager {
+  .page-header {
+    margin-bottom: $spacing-xl;
+    
+    .page-title {
+      font-size: $font-size-extra-large;
+      font-weight: bold;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .page-desc {
+      color: $text-secondary;
+      margin: 0;
+    }
+  }
+  
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+    
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+    }
+  }
+  
+  .user-table-card {
+    .role-tag {
+      margin-right: $spacing-xs;
+      
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+    
+    .pagination-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: $spacing-lg;
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: $breakpoint-md) {
+  .user-manager {
+    .toolbar {
+      flex-direction: column;
+      gap: $spacing-md;
+      align-items: stretch;
+      
+      .toolbar-left,
+      .toolbar-right {
+        justify-content: center;
+      }
+    }
+  }
+}

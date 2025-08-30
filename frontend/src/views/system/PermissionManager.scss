@@ -1,0 +1,44 @@
+.permission-manager {
+  .page-header {
+    margin-bottom: $spacing-xl;
+    
+    .page-title {
+      font-size: $font-size-extra-large;
+      font-weight: bold;
+      color: $text-primary;
+      margin-bottom: $spacing-sm;
+    }
+    
+    .page-desc {
+      color: $text-secondary;
+      margin: 0;
+    }
+  }
+  
+  .role-card,
+  .permission-card {
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+  
+  .permission-setting {
+    h4 {
+      margin-bottom: $spacing-md;
+      color: $text-primary;
+    }
+  }
+}
+
+// 响应式设计
+@media (max-width: $breakpoint-md) {
+  .permission-manager {
+    .card-header {
+      flex-direction: column;
+      gap: $spacing-sm;
+      align-items: stretch;
+    }
+  }
+}

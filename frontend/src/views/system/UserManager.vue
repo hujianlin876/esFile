@@ -1,12 +1,10 @@
 <template>
   <div class="user-manager">
-    <!-- 页面标题 -->
     <div class="page-header">
       <h1 class="page-title">用户管理</h1>
       <p class="page-desc">管理系统用户，设置角色和权限</p>
     </div>
     
-    <!-- 工具栏 -->
     <div class="toolbar">
       <div class="toolbar-left">
         <el-button type="primary" :icon="Plus" @click="showAddDialog = true">
@@ -31,7 +29,6 @@
       </div>
     </div>
     
-    <!-- 用户列表 -->
     <el-card class="user-table-card">
       <el-table
         :data="filteredUsers"
@@ -93,7 +90,6 @@
         </el-table-column>
       </el-table>
       
-      <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
           v-model:current-page="currentPage"
@@ -107,7 +103,6 @@
       </div>
     </el-card>
     
-    <!-- 添加/编辑用户对话框 -->
     <el-dialog
       v-model="showUserDialog"
       :title="isEdit ? '编辑用户' : '添加用户'"
@@ -221,10 +216,11 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, Search } from '@element-plus/icons-vue'
 import { formatTime } from '@/utils/format'
+import { getUserList, createUser, updateUser, deleteUser, resetUserPassword, toggleUserStatus as toggleUserStatusApi } from '@/api/system/user'
+import { getRoleList } from '@/api/system/permission'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { User, Role } from '@/api/types/auth'
 
-// 响应式数据
 const loading = ref(false)
 const saving = ref(false)
 const showUserDialog = ref(false)
@@ -252,7 +248,6 @@ const userForm = reactive({
   remark: ''
 })
 
-// 表单验证规则
 const userRules: FormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -271,7 +266,6 @@ const userRules: FormRules = {
   ]
 }
 
-// 计算属性
 const filteredUsers = computed(() => {
   if (!searchKeyword.value) return userList.value
   
@@ -283,47 +277,17 @@ const filteredUsers = computed(() => {
   )
 })
 
-// 引用
 const userFormRef = ref<FormInstance>()
 
-// 方法
 const loadUsers = async () => {
   loading.value = true
   try {
-    // TODO: 调用真实API
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 模拟数据
-    userList.value = [
-      {
-        id: 1,
-        username: 'admin',
-        nickname: '管理员',
-        email: 'admin@example.com',
-        phone: '13800138000',
-        gender: 'male',
-        birthday: '1990-01-01',
-        status: 'active',
-        avatar: '',
-        lastLoginTime: new Date().toISOString(),
-        roles: [{ id: 1, name: '超级管理员' }]
-      },
-      {
-        id: 2,
-        username: 'user1',
-        nickname: '普通用户',
-        email: 'user1@example.com',
-        phone: '13800138001',
-        gender: 'female',
-        birthday: '1995-05-05',
-        status: 'active',
-        avatar: '',
-        lastLoginTime: new Date(Date.now() - 86400000).toISOString(),
-        roles: [{ id: 2, name: '普通用户' }]
-      }
-    ]
-    
-    total.value = userList.value.length
+    const response = await getUserList({
+      page: currentPage.value,
+      size: pageSize.value
+    })
+    userList.value = response.data.list
+    total.value = response.data.total
   } catch (error) {
     ElMessage.error('加载用户列表失败')
   } finally {
@@ -333,12 +297,8 @@ const loadUsers = async () => {
 
 const loadRoles = async () => {
   try {
-    // TODO: 调用真实API
-    roleList.value = [
-      { id: 1, name: '超级管理员', code: 'SUPER_ADMIN' },
-      { id: 2, name: '普通用户', code: 'USER' },
-      { id: 3, name: '文件管理员', code: 'FILE_ADMIN' }
-    ]
+    const response = await getRoleList()
+    roleList.value = response.data
   } catch (error) {
     ElMessage.error('加载角色列表失败')
   }
@@ -346,7 +306,6 @@ const loadRoles = async () => {
 
 const handleSearch = () => {
   currentPage.value = 1
-  // 搜索逻辑已在计算属性中处理
 }
 
 const handleSelectionChange = (selection: User[]) => {
@@ -399,14 +358,18 @@ const saveUser = async () => {
     await userFormRef.value.validate()
     saving.value = true
     
-    // TODO: 调用真实API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    if (isEdit.value) {
+      await updateUser(userForm.id, userForm)
+      ElMessage.success('用户更新成功')
+    } else {
+      await createUser(userForm)
+      ElMessage.success('用户添加成功')
+    }
     
-    ElMessage.success(isEdit.value ? '用户更新成功' : '用户添加成功')
     showUserDialog.value = false
     loadUsers()
   } catch (error) {
-    // 验证失败
+    ElMessage.error('保存失败')
   } finally {
     saving.value = false
   }
@@ -424,7 +387,7 @@ const resetPassword = async (user: User) => {
       }
     )
     
-    // TODO: 调用重置密码API
+    await resetUserPassword(user.id)
     ElMessage.success('密码重置成功')
   } catch {
     // 用户取消
@@ -444,9 +407,9 @@ const toggleUserStatus = async (user: User) => {
       }
     )
     
-    // TODO: 调用更新状态API
-    user.status = user.status === 'active' ? 'inactive' : 'active'
+    await toggleUserStatusApi(user.id)
     ElMessage.success(`用户${action}成功`)
+    loadUsers()
   } catch {
     // 用户取消
   }
@@ -464,13 +427,9 @@ const deleteUser = async (user: User) => {
       }
     )
     
-    // TODO: 调用删除用户API
-    const index = userList.value.findIndex(u => u.id === user.id)
-    if (index > -1) {
-      userList.value.splice(index, 1)
-      total.value--
-    }
+    await deleteUser(user.id)
     ElMessage.success('用户删除成功')
+    loadUsers()
   } catch {
     // 用户取消
   }
@@ -479,10 +438,12 @@ const deleteUser = async (user: User) => {
 const handleSizeChange = (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  loadUsers()
 }
 
 const handleCurrentChange = (page: number) => {
   currentPage.value = page
+  loadUsers()
 }
 
 const getUserInitials = (name: string) => {
@@ -490,74 +451,11 @@ const getUserInitials = (name: string) => {
   return name.charAt(0).toUpperCase()
 }
 
-// 生命周期
 onMounted(async () => {
   await Promise.all([loadUsers(), loadRoles()])
 })
 </script>
 
-<style scoped lang="scss">
-.user-manager {
-  .page-header {
-    margin-bottom: $spacing-xl;
-    
-    .page-title {
-      font-size: $font-size-extra-large;
-      font-weight: bold;
-      color: $text-primary;
-      margin-bottom: $spacing-sm;
-    }
-    
-    .page-desc {
-      color: $text-secondary;
-      margin: 0;
-    }
-  }
-  
-  .toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-lg;
-    
-    .toolbar-left,
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-      gap: $spacing-md;
-    }
-  }
-  
-  .user-table-card {
-    .role-tag {
-      margin-right: $spacing-xs;
-      
-      &:last-child {
-        margin-right: 0;
-      }
-    }
-    
-    .pagination-wrapper {
-      display: flex;
-      justify-content: center;
-      margin-top: $spacing-lg;
-    }
-  }
-}
-
-// 响应式设计
-@media (max-width: $breakpoint-md) {
-  .user-manager {
-    .toolbar {
-      flex-direction: column;
-      gap: $spacing-md;
-      align-items: stretch;
-      
-      .toolbar-left,
-      .toolbar-right {
-        justify-content: center;
-      }
-    }
-  }
-}
+<style lang="scss" scoped>
+@import './UserManager.scss';
 </style>
