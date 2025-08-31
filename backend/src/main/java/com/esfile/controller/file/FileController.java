@@ -5,6 +5,8 @@ import com.esfile.entity.dto.FileUploadDto;
 import com.esfile.entity.dto.FileSearchDto;
 import com.esfile.entity.mybatis.FileInfo;
 import com.esfile.service.file.FileService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,8 @@ import java.util.ArrayList;
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 
     @Autowired
     private FileService fileService;
@@ -56,17 +60,52 @@ public class FileController {
             
             // 处理时间范围
             if (dateRange != null && !dateRange.isEmpty()) {
-                // TODO: 解析时间范围字符串，设置startTime和endTime
+                try {
+                    // 解析时间范围字符串，格式：2024-01-01,2024-12-31
+                    String[] dates = dateRange.split(",");
+                    if (dates.length == 2) {
+                        searchDto.setStartTime(dates[0].trim() + " 00:00:00");
+                        searchDto.setEndTime(dates[1].trim() + " 23:59:59");
+                    } else if (dates.length == 1) {
+                        // 只有开始时间
+                        searchDto.setStartTime(dates[0].trim() + " 00:00:00");
+                        searchDto.setEndTime("2030-12-31 23:59:59");
+                    }
+                } catch (Exception e) {
+                    logger.warn("时间范围解析失败: {}, 使用默认值", dateRange);
+                    searchDto.setStartTime("2020-01-01 00:00:00");
+                    searchDto.setEndTime("2030-12-31 23:59:59");
+                }
             }
             
             // 处理大小范围
             if (sizeRange != null && !sizeRange.isEmpty()) {
-                // TODO: 解析大小范围字符串，设置minSize和maxSize
+                try {
+                    // 解析大小范围字符串，格式：1MB,100MB 或 1048576,104857600
+                    String[] sizes = sizeRange.split(",");
+                    if (sizes.length == 2) {
+                        searchDto.setMinSize(parseFileSize(sizes[0].trim()));
+                        searchDto.setMaxSize(parseFileSize(sizes[1].trim()));
+                    } else if (sizes.length == 1) {
+                        // 只有最小值
+                        searchDto.setMinSize(parseFileSize(sizes[0].trim()));
+                        searchDto.setMaxSize(Long.MAX_VALUE);
+                    }
+                } catch (Exception e) {
+                    logger.warn("大小范围解析失败: {}, 使用默认值", sizeRange);
+                    searchDto.setMinSize(0L);
+                    searchDto.setMaxSize(Long.MAX_VALUE);
+                }
             }
             
             // 处理标签
             if (tags != null && tags.length > 0) {
                 searchDto.setTags(String.join(",", tags));
+            }
+            
+            // 设置其他字段
+            if (uploader != null && !uploader.isEmpty()) {
+                searchDto.setUploadUserName(uploader);
             }
             
             // 调用正确的Service方法
@@ -101,7 +140,7 @@ public class FileController {
     public ResponseResult<FileInfo> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String description,
-            @RequestParam(required = false) String tags,
+            @RequestParam(required = false) String[] tags,
             @RequestParam(defaultValue = "0") Integer isPublic,
             @RequestParam(required = false) Long parentFolderId) {
         
@@ -110,7 +149,9 @@ public class FileController {
             FileUploadDto uploadDto = new FileUploadDto();
             uploadDto.setFile(file);
             uploadDto.setDescription(description);
-            uploadDto.setTags(tags);
+            if (tags != null && tags.length > 0) {
+                uploadDto.setTags(String.join(",", tags));
+            }
             uploadDto.setIsPublic(isPublic);
             uploadDto.setParentFolderId(parentFolderId);
             
@@ -142,7 +183,7 @@ public class FileController {
     public ResponseResult<List<FileInfo>> batchUploadFiles(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(required = false) String description,
-            @RequestParam(required = false) String tags,
+            @RequestParam(required = false) String[] tags,
             @RequestParam(defaultValue = "0") Integer isPublic,
             @RequestParam(required = false) Long parentFolderId) {
         
@@ -154,7 +195,9 @@ public class FileController {
                 FileUploadDto uploadDto = new FileUploadDto();
                 uploadDto.setFile(file);
                 uploadDto.setDescription(description);
-                uploadDto.setTags(tags);
+                if (tags != null && tags.length > 0) {
+                    uploadDto.setTags(String.join(",", tags));
+                }
                 uploadDto.setIsPublic(isPublic);
                 uploadDto.setParentFolderId(parentFolderId);
                 
@@ -427,5 +470,35 @@ public class FileController {
             return 1L;
         }
         return 1L; // 临时返回默认值
+    }
+
+    /**
+     * 解析文件大小字符串
+     * 支持格式：1KB, 1MB, 1GB, 1TB 或 1024
+     */
+    private Long parseFileSize(String sizeStr) {
+        if (sizeStr == null || sizeStr.trim().isEmpty()) {
+            return 0L;
+        }
+        
+        sizeStr = sizeStr.trim().toUpperCase();
+        
+        try {
+            if (sizeStr.endsWith("KB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024;
+            } else if (sizeStr.endsWith("MB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024;
+            } else if (sizeStr.endsWith("GB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024 * 1024;
+            } else if (sizeStr.endsWith("TB")) {
+                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024L * 1024 * 1024 * 1024;
+            } else {
+                // 纯数字，按字节处理
+                return Long.parseLong(sizeStr);
+            }
+        } catch (NumberFormatException e) {
+            logger.warn("文件大小解析失败: {}, 返回0", sizeStr);
+            return 0L;
+        }
     }
 }

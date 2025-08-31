@@ -135,8 +135,8 @@ public class PermissionServiceImpl implements PermissionService {
         node.put("name", permission.getPermissionName());
         node.put("code", permission.getPermissionCode());
         node.put("type", permission.getPermissionType());
-        node.put("url", permission.getUrl());
-        node.put("icon", permission.getIcon());
+        node.put("url", permission.getPermissionPath());
+        node.put("icon", permission.getPermissionIcon());
         node.put("sort", permission.getSort());
         node.put("status", permission.getStatus());
         
@@ -196,8 +196,8 @@ public class PermissionServiceImpl implements PermissionService {
         Map<String, Object> node = new HashMap<>();
         node.put("id", permission.getId());
         node.put("title", permission.getPermissionName());
-        node.put("path", permission.getUrl());
-        node.put("icon", permission.getIcon());
+        node.put("path", permission.getPermissionPath());
+        node.put("icon", permission.getPermissionIcon());
         node.put("sort", permission.getSort());
         node.put("status", permission.getStatus());
         

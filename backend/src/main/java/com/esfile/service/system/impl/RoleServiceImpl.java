@@ -111,7 +111,9 @@ public class RoleServiceImpl implements RoleService {
         // 添加新的权限关联
         if (permissionIds != null && !permissionIds.isEmpty()) {
             for (Long permissionId : permissionIds) {
-                RolePermission rolePermission = new RolePermission(roleId, permissionId);
+                RolePermission rolePermission = new RolePermission();
+                rolePermission.setRoleId(roleId);
+                rolePermission.setPermissionId(permissionId);
                 roleMapper.insertRolePermission(rolePermission);
             }
         }

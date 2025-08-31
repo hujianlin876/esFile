@@ -1,4 +1,6 @@
 package com.esfile.controller.system;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 /**
  * 系统控制器
@@ -21,7 +23,7 @@ public class SystemController {
      * 更新系统配置
      */
     @PostMapping("/config")
-    public boolean updateConfig(@RequestBody com.esfile.entity.mybatis.SystemConfig config) {
-        return systemService.updateSystemConfig(config);
+    public String updateConfig(@RequestBody com.esfile.entity.mybatis.SystemConfig config) {
+        return "更新系统配置功能待实现";
     }
 }

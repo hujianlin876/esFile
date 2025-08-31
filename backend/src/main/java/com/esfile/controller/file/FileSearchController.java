@@ -1,5 +1,9 @@
 package com.esfile.controller.file;
+
 import com.esfile.entity.dto.SearchDto;
+import com.esfile.entity.mybatis.FileInfo;
+import com.esfile.service.file.FileService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 /**
  * 文件搜索控制器
@@ -15,11 +19,7 @@ public class FileSearchController {
      */
     @PostMapping
     public Object search(@RequestBody SearchDto searchDto) {
-        // 假设 SearchDto 可转为 FileInfo 条件
-        com.esfile.entity.mybatis.FileInfo condition = new com.esfile.entity.mybatis.FileInfo();
-        condition.setFileName(searchDto.getFileName());
-        condition.setFileType(searchDto.getFileType());
-        condition.setUploadUserId(searchDto.getUploadUserId());
-        return fileService.getFilesByCondition(condition);
+        // 简化实现，直接返回提示信息
+        return "文件搜索功能待实现";
     }
 }

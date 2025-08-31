@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.context.annotation.Primary;
 
 /**
  * Elasticsearch配置类
@@ -43,6 +44,7 @@ public class ElasticsearchConfig extends AbstractElasticsearchConfiguration {
      */
     @Override
     @Bean
+    @Primary
     public RestHighLevelClient elasticsearchClient() {
         // 解析集群节点地址
         String[] nodes = clusterNodes.split(",");

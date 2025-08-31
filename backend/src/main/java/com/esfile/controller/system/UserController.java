@@ -37,7 +37,7 @@ public class UserController {
             Map<String, Object> result = userService.getUserList(page, size, keyword, status, role, dept);
             return ResponseResult.success(result);
         } catch (Exception e) {
-            return ControllerUtil.handleException(e, "获取用户列表");
+            return ResponseResult.fail("获取用户列表失败: " + e.getMessage());
         }
     }
 
@@ -54,7 +54,7 @@ public class UserController {
                 return ResponseResult.fail("用户不存在");
             }
         } catch (Exception e) {
-            return ControllerUtil.handleException(e, "获取用户详情");
+            return ResponseResult.fail("获取用户详情失败: " + e.getMessage());
         }
     }
 
@@ -196,7 +196,7 @@ public class UserController {
             List<Map<String, Object>> roles = userService.getUserRoles(id);
             return ResponseResult.success(roles);
         } catch (Exception e) {
-            return ControllerUtil.handleException(e, "获取用户角色");
+            return ResponseResult.fail("获取用户角色失败: " + e.getMessage());
         }
     }
 
@@ -210,7 +210,7 @@ public class UserController {
             Map<String, Object> result = userService.importUsers(file);
             return ResponseResult.success(result);
         } catch (Exception e) {
-            return ControllerUtil.handleException(e, "导入用户");
+            return ResponseResult.fail("导入用户失败: " + e.getMessage());
         }
     }
 
@@ -237,7 +237,7 @@ public class UserController {
             Map<String, Object> stats = userService.getUserStats();
             return ResponseResult.success(stats);
         } catch (Exception e) {
-            return ControllerUtil.handleException(e, "获取用户统计");
+            return ResponseResult.fail("获取用户统计失败: " + e.getMessage());
         }
     }
 }

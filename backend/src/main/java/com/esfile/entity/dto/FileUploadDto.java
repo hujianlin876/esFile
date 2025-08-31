@@ -163,4 +163,9 @@ public class FileUploadDto {
     public void setEncryptPassword(String encryptPassword) {
         this.encryptPassword = encryptPassword;
     }
+
+    // 添加缺失的方法
+    public void setUserId(Long userId) {
+        this.uploadUserId = userId;
+    }
 }

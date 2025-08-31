@@ -3,65 +3,12 @@ spring:
     active: dev
   application:
     name: esfile-backend
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://139.224.67.165:11006/esfile?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: hujianlin
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
   mybatis:
     mapper-locations: classpath:mapper/*.xml
     type-aliases-package: com.esfile.entity
     configuration:
       map-underscore-to-camel-case: true
       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  redis:
-    host: 139.224.67.165
-    port: 11001
-    password: hujianlin
-    database: 0
-    timeout: 3000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
-  data:
-    elasticsearch:
-      repositories:
-        enabled: true
-      cluster-name: elasticsearch
-      cluster-nodes: 139.224.67.165:11015
-      username: elastic
-      password: hujianlin
-
-# MinIO配置
-minio:
-  endpoint: http://139.224.67.165:11004
-  access-key: hujianlin
-  secret-key: hujianlin
-  bucket: elasticsearch
-
-# JWT配置
-jwt:
-  secret: esfile-secret-key-2024
-  expiration: 86400000
-  header: Authorization
-
-# 文件上传配置
-file:
-  upload:
-    max-size: 104857600  # 100MB
-    chunk-size: 5242880  # 5MB
-    temp-dir: /tmp/upload
-    allowed-types: jpg,jpeg,png,gif,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,7z,mp4,avi,mov,mp3,wav
-    chunk-concurrency: 3
 
 # 存储策略配置
 storage:
@@ -73,18 +20,10 @@ storage:
   versioning: true
   max-versions: 5
 
-# 日志配置
-logging:
-  level:
-    com.esfile: DEBUG
-    org.springframework.security: DEBUG
-  file:
-    name: logs/esfile-backend.log
-
-# 服务器配置
-server:
-  port: 8080
-  servlet:
-    context-path: /api
+# 文件上传配置（dev环境没有的配置）
+file:
+  upload:
+    allowed-types: jpg,jpeg,png,gif,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar,7z,mp4,avi,mov,mp3,wav
+    chunk-concurrency: 3
 
 

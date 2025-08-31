@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -80,8 +81,12 @@ public class FileDownloadServiceImpl implements FileDownloadService {
         // 设置响应头
         String zipFileName = "files_" + System.currentTimeMillis() + ".zip";
         response.setContentType("application/zip");
-        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + 
-                         URLEncoder.encode(zipFileName, StandardCharsets.UTF_8.toString()));
+        try {
+            response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + 
+                             URLEncoder.encode(zipFileName, StandardCharsets.UTF_8.name()));
+        } catch (UnsupportedEncodingException e) {
+            response.setHeader("Content-Disposition", "attachment; filename=" + zipFileName);
+        }
 
         try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
             
@@ -127,8 +132,12 @@ public class FileDownloadServiceImpl implements FileDownloadService {
 
         // 设置预览响应头
         response.setContentType(fileInfo.getFileType());
-        response.setHeader("Content-Disposition", "inline; filename*=UTF-8''" + 
-                         URLEncoder.encode(fileInfo.getFileName(), StandardCharsets.UTF_8));
+        try {
+            response.setHeader("Content-Disposition", "inline; filename*=UTF-8''" + 
+                             URLEncoder.encode(fileInfo.getFileName(), StandardCharsets.UTF_8.name()));
+        } catch (UnsupportedEncodingException e) {
+            response.setHeader("Content-Disposition", "inline; filename=" + fileInfo.getFileName());
+        }
 
         // 获取文件流并写入响应
         try (InputStream inputStream = getFileInputStream(id);
@@ -152,7 +161,7 @@ public class FileDownloadServiceImpl implements FileDownloadService {
     @Override
     public byte[] getFileBytes(Long id) {
         try (InputStream inputStream = getFileInputStream(id)) {
-            return inputStream.readAllBytes();
+            return org.apache.commons.io.IOUtils.toByteArray(inputStream);
         } catch (IOException e) {
             throw new RuntimeException("获取文件内容失败", e);
         }

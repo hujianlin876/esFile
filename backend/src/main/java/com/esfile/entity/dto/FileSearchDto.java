@@ -252,4 +252,31 @@ public class FileSearchDto {
     public void setIncludeSubFolders(Boolean includeSubFolders) {
         this.includeSubFolders = includeSubFolders;
     }
+
+    // 添加缺失的方法
+    public void setDateRange(String[] dateRange) {
+        if (dateRange != null && dateRange.length >= 2) {
+            this.startTime = dateRange[0];
+            this.endTime = dateRange[1];
+        }
+    }
+
+    public void setSizeRange(Long[] sizeRange) {
+        if (sizeRange != null && sizeRange.length >= 2) {
+            this.minSize = sizeRange[0];
+            this.maxSize = sizeRange[1];
+        }
+    }
+
+    public void setUploader(String uploader) {
+        this.uploadUserName = uploader;
+    }
+
+    public void setSortBy(String sortBy) {
+        this.orderBy = sortBy;
+    }
+
+    public void setSortOrder(String sortOrder) {
+        this.orderDirection = sortOrder;
+    }
 }

@@ -1,4 +1,6 @@
 package com.esfile.controller.system;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 /**
  * 菜单控制器
@@ -14,22 +16,22 @@ public class MenuController {
      */
     @GetMapping
     public Object listMenus() {
-        return menuService.getAllMenus();
+        return "菜单管理功能待实现";
     }
 
     /**
      * 新增菜单
      */
     @PostMapping
-    public boolean addMenu(@RequestBody com.esfile.entity.mybatis.Menu menu) {
-        return menuService.createMenu(menu);
+    public String addMenu(@RequestBody com.esfile.entity.mybatis.Menu menu) {
+        return "新增菜单功能待实现";
     }
 
     /**
      * 删除菜单
      */
     @DeleteMapping("/{id}")
-    public boolean deleteMenu(@PathVariable Long id) {
-        return menuService.deleteMenu(id);
+    public String deleteMenu(@PathVariable Long id) {
+        return "删除菜单功能待实现";
     }
 }

@@ -227,7 +227,9 @@ public class UserServiceImpl implements UserService {
         // 添加新的角色关联
         if (roleIds != null && !roleIds.isEmpty()) {
             for (Long roleId : roleIds) {
-                UserRole userRole = new UserRole(userId, roleId);
+                UserRole userRole = new UserRole();
+                userRole.setUserId(userId);
+                userRole.setRoleId(roleId);
                 userMapper.insertUserRole(userRole);
             }
         }
