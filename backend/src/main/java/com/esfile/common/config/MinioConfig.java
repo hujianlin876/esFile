@@ -48,10 +48,12 @@ public class MinioConfig {
      * 初始化MinIO桶
      */
     @PostConstruct
-    @DependsOn("minioClient")
     public void initBucket() {
         try {
-            MinioClient client = minioClient();
+            MinioClient client = MinioClient.builder()
+                    .endpoint(endpoint)
+                    .credentials(accessKey, secretKey)
+                    .build();
             
             // 检查桶是否存在
             boolean bucketExists = client.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
