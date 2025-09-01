@@ -12,7 +12,7 @@ import java.util.Map;
  * 简化版本，只保留接口中定义的方法
  */
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/dashboard")
 public class DashboardController {
 
     @Autowired

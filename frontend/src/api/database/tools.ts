@@ -76,21 +76,21 @@ export interface SqlAnalysisResponse {
  * 格式化SQL语句
  */
 export const formatSql = (data: SqlFormatRequest) => {
-  return request.post<SqlFormatResponse>('/database/format-sql', data)
+  return request.post<SqlFormatResponse>('/api/database/tools/format-sql', data)
 }
 
 /**
  * 导出查询结果
  */
 export const exportQueryResult = (data: ExportRequest) => {
-  return request.post<ExportResponse>('/database/export-result', data)
+  return request.post<ExportResponse>('/api/database/tools/export-result', data)
 }
 
 /**
  * 分析SQL语句
  */
 export const analyzeSql = (data: SqlAnalysisRequest) => {
-  return request.post<SqlAnalysisResponse>('/database/analyze-sql', data)
+  return request.post<SqlAnalysisResponse>('/api/database/tools/analyze-sql', data)
 }
 
 /**
@@ -106,7 +106,7 @@ export const getSqlTemplates = (category?: string) => {
     tags: string[]
     createTime: string
     updateTime: string
-  }>>('/database/sql-templates', {
+  }>>('/api/database/tools/templates', {
     params: { category }
   })
 }
@@ -121,7 +121,7 @@ export const createSqlTemplate = (data: {
   sql: string
   tags: string[]
 }) => {
-  return request.post('/database/sql-templates', data)
+  return request.post('/api/database/tools/templates', data)
 }
 
 /**
@@ -134,14 +134,14 @@ export const updateSqlTemplate = (id: number, data: {
   sql?: string
   tags?: string[]
 }) => {
-  return request.put(`/database/sql-templates/${id}`, data)
+  return request.put(`/api/database/tools/templates/${id}`, data)
 }
 
 /**
  * 删除SQL模板
  */
 export const deleteSqlTemplate = (id: number) => {
-  return request.delete(`/database/sql-templates/${id}`)
+  return request.delete(`/api/database/tools/templates/${id}`)
 }
 
 /**
@@ -162,7 +162,7 @@ export const getSqlHistory = (page = 1, size = 20) => {
       createTime: string
     }>
     total: number
-  }>('/database/sql-history', {
+  }>('/api/database/sql-history', {
     params: { page, size }
   })
 }
@@ -171,7 +171,7 @@ export const getSqlHistory = (page = 1, size = 20) => {
  * 清理SQL历史记录
  */
 export const clearSqlHistory = (beforeDate?: string) => {
-  return request.delete('/database/sql-history', {
+  return request.delete('/api/database/sql-history', {
     params: { beforeDate }
   })
 }
@@ -188,12 +188,12 @@ export const getConnectionPoolStatus = () => {
     minConnections: number
     connectionTimeout: number
     idleTimeout: number
-  }>('/database/connection-pool-status')
+  }>('/api/database/connection-pool-status')
 }
 
 /**
  * 重置数据库连接池
  */
 export const resetConnectionPool = () => {
-  return request.post('/database/connection-pool-reset')
+  return request.post('/api/database/connection-pool-reset')
 }

@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
         // 设置默认值
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
-        user.setStatus("ACTIVE");
+        user.setStatus(1); // 1-激活状态
         user.setLoginFailCount(0);
         user.setLastLoginTime(null);
         user.setLastLoginIp(null);
@@ -195,7 +195,7 @@ public class UserServiceImpl implements UserService {
             return false;
         }
         
-        String newStatus = "ACTIVE".equals(user.getStatus()) ? "INACTIVE" : "ACTIVE";
+        Integer newStatus = Integer.valueOf(1).equals(user.getStatus()) ? 0 : 1;
         
         User updateUser = new User();
         updateUser.setId(id);
@@ -208,10 +208,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public boolean batchUpdateStatus(List<Long> ids, String status) {
+        Integer statusValue = parseStatus(status);
         for (Long id : ids) {
             User updateUser = new User();
             updateUser.setId(id);
-            updateUser.setStatus(status);
+            updateUser.setStatus(statusValue);
             updateUser.setUpdateTime(LocalDateTime.now());
             userMapper.updateById(updateUser);
         }
@@ -311,6 +312,27 @@ public class UserServiceImpl implements UserService {
         return userRoles.stream()
                 .map(role -> (String) role.get("roleName"))
                 .collect(Collectors.toList());
+    }
+    
+    /**
+     * 解析状态字符串为整数
+     */
+    private Integer parseStatus(String status) {
+        if (status == null) {
+            return 1; // 默认激活状态
+        }
+        switch (status.toUpperCase()) {
+            case "ACTIVE":
+                return 1;
+            case "INACTIVE":
+                return 0;
+            case "LOCKED":
+                return 2;
+            case "DISABLED":
+                return 3;
+            default:
+                return 1; // 默认激活状态
+        }
     }
 }
 

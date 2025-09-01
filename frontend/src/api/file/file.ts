@@ -45,14 +45,14 @@ export const getFileList = (params: PageRequest & {
     backendParams.uploadUserName = params.uploader
   }
   
-  return request.get<PageResult<FileInfo>>('/files', { params: backendParams })
+  return request.get<PageResult<FileInfo>>('/files/query/list', { params: backendParams })
 }
 
 /**
  * 获取文件详情
  */
 export const getFileDetail = (id: number) => {
-  return request.get<FileInfo>(`/files/${id}`)
+  return request.get<FileInfo>(`/files/query/${id}`)
 }
 
 /**
@@ -220,7 +220,7 @@ export const getFileThumbnail = (id: number, width = 200, height = 200) => {
  * 搜索文件
  */
 export const searchFiles = (params: FileSearchParams) => {
-  return request.post<PageResult<FileInfo>>('/files/search', params)
+  return request.post<PageResult<FileInfo>>('/files/query/search', params)
 }
 
 /**
@@ -232,14 +232,14 @@ export const getFileStats = () => {
     totalSize: number
     fileTypeDistribution: Record<string, number>
     recentUploads: number
-  }>('/files/stats')
+  }>('/files/query/stats')
 }
 
 /**
  * 获取文件夹结构
  */
 export const getFolderStructure = (folderId?: number) => {
-  return request.get('/files/folders', {
+  return request.get('/files/query/folders/structure', {
     params: { parentId: folderId }
   })
 }

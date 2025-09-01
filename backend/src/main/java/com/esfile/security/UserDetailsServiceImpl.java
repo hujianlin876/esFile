@@ -38,7 +38,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             }
 
             // 检查用户状态
-            if (!"1".equals(user.getStatus())) {
+            if (!Integer.valueOf(1).equals(user.getStatus())) {
                 throw new UsernameNotFoundException("用户账户已被禁用: " + username);
             }
 
@@ -69,7 +69,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .accountExpired(false)  // 账户未过期
                 .accountLocked(user.isLocked())   // 根据锁定状态判断
                 .credentialsExpired(false) // 凭据未过期
-                .disabled(!"1".equals(user.getStatus())) // 根据状态判断是否启用
+                .disabled(!Integer.valueOf(1).equals(user.getStatus())) // 根据状态判断是否启用
                 .build();
 
         } catch (Exception e) {

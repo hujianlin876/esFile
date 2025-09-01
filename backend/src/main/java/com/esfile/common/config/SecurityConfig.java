@@ -74,14 +74,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
                 // 公开接口
                 .antMatchers(
-                    "/api/auth/login",
-                    "/api/auth/register",
-                    "/api/auth/refresh",
+                    "/auth/login",
+                    "/auth/register",
+                    "/auth/refresh",
+                    "/health",
+                    "/health/**",
                     "/swagger-ui/**",
                     "/swagger-resources/**",
                     "/v2/api-docs",
                     "/v3/api-docs",
                     "/webjars/**"
+                ).permitAll()
+                // 数据库相关接口（无需认证）
+                .antMatchers(
+                    "/database/execute",
+                    "/database/stats",
+                    "/database/tables/**",
+                    "/database/backup",
+                    "/database/restore/**",
+                    "/database/sql-history",
+                    "/database/connection-pool-status",
+                    "/database/connection-pool-reset",
+                    "/database/tools/**",
+                    "/database/**"
                 ).permitAll()
                 // 文件预览接口（需要认证但不需要特殊权限）
                 .antMatchers("/api/files/preview/**").authenticated()

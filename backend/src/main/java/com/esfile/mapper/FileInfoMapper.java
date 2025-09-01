@@ -223,4 +223,48 @@ public interface FileInfoMapper {
      * @return 文件信息列表
      */
     List<FileInfo> selectByPermission(@Param("userId") Long userId, @Param("permission") String permission);
+    
+    /**
+     * 根据父级文件夹ID查询文件
+     * 
+     * @param parentId 父级文件夹ID
+     * @return 文件信息列表
+     */
+    List<FileInfo> selectByParentId(@Param("parentId") Long parentId);
+    
+    /**
+     * 根据父级文件夹ID查询文件夹
+     * 
+     * @param parentId 父级文件夹ID
+     * @return 文件夹列表
+     */
+    List<FileInfo> selectFoldersByParentId(@Param("parentId") Long parentId);
+    
+    /**
+     * 查询总存储大小
+     * 
+     * @return 总存储大小
+     */
+    Long selectTotalSize();
+    
+    /**
+     * 查询今日上传数量
+     * 
+     * @return 今日上传数量
+     */
+    Long selectTodayUploads();
+    
+    /**
+     * 查询文件夹数量
+     * 
+     * @return 文件夹数量
+     */
+    Long selectFolderCount();
+    
+    /**
+     * 查询月度上传统计
+     * 
+     * @return 月度上传统计
+     */
+    List<Map<String, Object>> selectMonthlyUploadStats();
 }

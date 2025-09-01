@@ -128,8 +128,8 @@
     <!-- 分页器 -->
     <div v-if="showPagination" class="table-pagination">
       <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :page-sizes="pageSizes"
         :total="total"
         :layout="paginationLayout"
@@ -143,9 +143,10 @@
 
     <!-- 列设置对话框 -->
     <el-dialog
-      v-model="showColumnSettingDialog"
+      :model-value="showColumnSettingDialog"
       title="列设置"
       width="500px"
+      @update:model-value="showColumnSettingDialog = $event"
     >
       <el-checkbox-group v-model="visibleColumnKeys">
         <el-checkbox
@@ -190,18 +191,18 @@ interface Props {
   highlightCurrentRow?: boolean
   currentRowKey?: string | number
   rowClassName?: string | ((params: any) => string)
-  rowStyle?: object | ((params: any) => object)
+  rowStyle?: any
   cellClassName?: string | ((params: any) => string)
-  cellStyle?: object | ((params: any) => object)
+  cellStyle?: any
   headerRowClassName?: string | ((params: any) => string)
-  headerRowStyle?: object | ((params: any) => object)
+  headerRowStyle?: any
   headerCellClassName?: string | ((params: any) => string)
-  headerCellStyle?: object | ((params: any) => object)
-  rowKey?: string | ((row: any) => string | number)
+  headerCellStyle?: any
+  rowKey?: string | ((row: any) => string)
   emptyText?: string
   defaultExpandAll?: boolean
-  expandRowKeys?: (string | number)[]
-  defaultSort?: object
+  expandRowKeys?: string[]
+  defaultSort?: any
   tooltipEffect?: 'dark' | 'light'
   showSummary?: boolean
   sumText?: string

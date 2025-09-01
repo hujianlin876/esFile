@@ -33,28 +33,28 @@
     <!-- 根据ID查询用户 -->
     <select id="selectById" parameterType="java.lang.Long" resultMap="UserResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM user
+        FROM sys_user
         WHERE id = #{id}
     </select>
 
     <!-- 根据用户名查询用户 -->
     <select id="selectByUsername" parameterType="java.lang.String" resultMap="UserResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM user
+        FROM sys_user
         WHERE username = #{username}
     </select>
 
     <!-- 根据邮箱查询用户 -->
     <select id="selectByEmail" parameterType="java.lang.String" resultMap="UserResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM user
+        FROM sys_user
         WHERE email = #{email}
     </select>
 
     <!-- 分页查询用户列表 -->
     <select id="selectUserList" resultMap="UserResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM user
+        FROM sys_user
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (username LIKE CONCAT('%', #{keyword}, '%') 
@@ -67,7 +67,7 @@
             <if test="role != null and role != ''">
                 AND id IN (
                     SELECT DISTINCT ur.user_id 
-                    FROM user_role ur 
+                    FROM sys_user_role ur 
                     JOIN role r ON ur.role_id = r.id 
                     WHERE r.role_name LIKE CONCAT('%', #{role}, '%')
                 )
@@ -85,7 +85,7 @@
     <!-- 统计用户数量 -->
     <select id="countUsers" resultType="long">
         SELECT COUNT(*)
-        FROM user
+        FROM sys_user
         <where>
             <if test="keyword != null and keyword != ''">
                 AND (username LIKE CONCAT('%', #{keyword}, '%') 
@@ -98,7 +98,7 @@
             <if test="role != null and role != ''">
                 AND id IN (
                     SELECT DISTINCT ur.user_id 
-                    FROM user_role ur 
+                    FROM sys_user_role ur 
                     JOIN role r ON ur.role_id = r.id 
                     WHERE r.role_name LIKE CONCAT('%', #{role}, '%')
                 )
@@ -114,13 +114,13 @@
     <!-- 根据时间范围统计用户数量 -->
     <select id="countUsersByDateRange" resultType="long">
         SELECT COUNT(*)
-        FROM user
+        FROM sys_user
         WHERE create_time BETWEEN #{startTime} AND #{endTime}
     </select>
 
     <!-- 插入用户 -->
     <insert id="insert" parameterType="com.esfile.entity.mybatis.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (
+        INSERT INTO sys_user (
             username, password, real_name, email, phone, avatar, gender, status, 
             dept_id, login_fail_count, last_login_time, last_login_ip, 
             create_time, update_time, create_by, update_by
@@ -133,7 +133,7 @@
 
     <!-- 更新用户 -->
     <update id="updateById" parameterType="com.esfile.entity.mybatis.User">
-        UPDATE user
+        UPDATE sys_user
         <set>
             <if test="username != null">username = #{username},</if>
             <if test="password != null">password = #{password},</if>
@@ -155,12 +155,12 @@
 
     <!-- 根据ID删除用户 -->
     <delete id="deleteById" parameterType="java.lang.Long">
-        DELETE FROM user WHERE id = #{id}
+        DELETE FROM sys_user WHERE id = #{id}
     </delete>
 
     <!-- 批量删除用户 -->
     <delete id="batchDeleteByIds">
-        DELETE FROM user WHERE id IN
+        DELETE FROM sys_user WHERE id IN
         <foreach collection="list" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
@@ -186,7 +186,7 @@
             r.role_name as roleName,
             r.role_code as roleCode,
             r.description as roleDescription
-        FROM user_role ur
+        FROM sys_user_role ur
         JOIN role r ON ur.role_id = r.id
         WHERE ur.user_id = #{userId}
     </select>

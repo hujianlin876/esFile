@@ -1,0 +1,74 @@
+# 测试环境配置
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/esfile_test?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:test123}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:1}
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 3
+        max-idle: 3
+        min-idle: 0
+        max-wait: -1ms
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+      cluster-name: ${ES_CLUSTER_NAME:elasticsearch}
+      cluster-nodes: ${ES_CLUSTER_NODES:localhost:9200}
+      username: ${ES_USERNAME:}
+      password: ${ES_PASSWORD:}
+
+# MinIO配置
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:esfile-test}
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:esfile-test-secret-key-2024}
+  expiration: ${JWT_EXPIRATION:86400000}
+  header: Authorization
+
+# 文件上传配置
+file:
+  upload:
+    max-size: -1
+    chunk-size: 1048576
+    temp-dir: /tmp/upload/test
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.esfile: DEBUG
+    org.springframework.security: DEBUG
+    org.mybatis: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: logs/esfile-backend-test.log
+    max-size: 50MB
+    max-history: 10
+
+# 服务器配置
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /api
+

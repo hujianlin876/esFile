@@ -30,35 +30,35 @@ export interface DatabaseStats {
  * 执行SQL语句
  */
 export const executeSql = (data: SqlExecuteRequest) => {
-  return request.post<SqlExecuteResponse>('/database/execute', data)
+  return request.post<SqlExecuteResponse>('/api/database/execute', data)
 }
 
 /**
  * 获取数据库状态
  */
 export const getDatabaseStats = () => {
-  return request.get<DatabaseStats>('/database/stats')
+  return request.get<DatabaseStats>('/api/database/stats')
 }
 
 /**
  * 获取数据库表列表
  */
 export const getTableList = () => {
-  return request.get<string[]>('/database/tables')
+  return request.get<string[]>('/api/database/tables')
 }
 
 /**
  * 获取表结构
  */
 export const getTableStructure = (tableName: string) => {
-  return request.get(`/database/tables/${tableName}/structure`)
+  return request.get(`/api/database/tables/${tableName}/structure`)
 }
 
 /**
  * 获取表数据
  */
 export const getTableData = (tableName: string, page = 1, size = 100) => {
-  return request.get(`/database/tables/${tableName}/data`, {
+  return request.get(`/api/database/tables/${tableName}/data`, {
     params: { page, size }
   })
 }
@@ -67,12 +67,12 @@ export const getTableData = (tableName: string, page = 1, size = 100) => {
  * 备份数据库
  */
 export const backupDatabase = (data: { name: string; description?: string }) => {
-  return request.post('/database/backup', data)
+  return request.post('/api/database/backup', data)
 }
 
 /**
  * 恢复数据库
  */
 export const restoreDatabase = (backupId: number) => {
-  return request.post(`/database/restore/${backupId}`)
+  return request.post(`/api/database/restore/${backupId}`)
 }

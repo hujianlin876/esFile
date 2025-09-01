@@ -109,16 +109,16 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
     
-    const result = await authStore.login({
+    const success = await authStore.login({
       username: loginForm.username,
       password: loginForm.password
     })
     
-    if (result.success) {
+    if (success) {
       ElMessage.success('登录成功')
       router.push('/')
     } else {
-      ElMessage.error('登录失败：' + (result.error?.message || '未知错误'))
+      ElMessage.error('登录失败：用户名或密码错误')
     }
   } catch (error: any) {
     if (error.message) {

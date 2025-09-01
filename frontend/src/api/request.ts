@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
@@ -13,7 +13,7 @@ const request: AxiosInstance = axios.create({
 
 // 请求拦截器
 request.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // 添加认证token
     const token = localStorage.getItem('token')
     if (token && config.headers) {
@@ -105,27 +105,27 @@ request.interceptors.response.use(
 )
 
 // 封装GET请求
-request.get = <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+request.get = <T = any>(url: string, config?: any) => {
   return request.request({ ...config, method: 'GET', url })
 }
 
 // 封装POST请求
-request.post = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+request.post = <T = any>(url: string, data?: any, config?: any) => {
   return request.request({ ...config, method: 'POST', url, data })
 }
 
 // 封装PUT请求
-request.put = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+request.put = <T = any>(url: string, data?: any, config?: any) => {
   return request.request({ ...config, method: 'PUT', url, data })
 }
 
 // 封装DELETE请求
-request.delete = <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+request.delete = <T = any>(url: string, config?: any) => {
   return request.request({ ...config, method: 'DELETE', url })
 }
 
 // 封装PATCH请求
-request.patch = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+request.patch = <T = any>(url: string, data?: any, config?: any) => {
   return request.request({ ...config, method: 'PATCH', url, data })
 }
 

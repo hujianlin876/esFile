@@ -25,20 +25,16 @@
         <div class="el-upload__text">
           将文件拖到此处，或<em>点击上传</em>
         </div>
-        <template #tip>
-          <div class="el-upload__tip">
-            {{ tip || '支持jpg/png/gif/pdf/doc/docx/xls/xlsx等格式文件' }}
-          </div>
-        </template>
       </template>
       
       <template v-else>
         <el-button type="primary" :icon="Plus">选择文件</el-button>
-        <template #tip>
-          <div class="el-upload__tip">
-            {{ tip || '支持jpg/png/gif/pdf/doc/docx/xls/xlsx等格式文件' }}
-          </div>
-        </template>
+      </template>
+      
+      <template #tip>
+        <div class="el-upload__tip">
+          {{ tip || '支持jpg/png/gif/pdf/doc/docx/xls/xlsx等格式文件' }}
+        </div>
       </template>
     </el-upload>
     
@@ -55,7 +51,7 @@
         </div>
         <el-progress
           :percentage="item.percentage"
-          :status="item.status === 'success' ? 'success' : item.status === 'error' ? 'exception' : undefined"
+          :status="getProgressStatus(item.status)"
         />
       </div>
     </div>
@@ -90,6 +86,7 @@ interface Props {
   tags?: string
   isPublic?: number
   parentFolderId?: number
+  showProgress?: boolean
 }
 
 interface Emits {
@@ -97,7 +94,7 @@ interface Emits {
   error: [error: Error, file: UploadUserFile, fileList: UploadFiles]
   change: [file: UploadUserFile, fileList: UploadFiles]
   remove: [file: UploadUserFile, fileList: UploadFiles]
-  exceed: [files: File[], fileList: UploadFiles]
+  exceed: [files: File[], uploadFiles: UploadUserFile[]]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -111,7 +108,8 @@ const props = withDefaults(defineProps<Props>(), {
   description: '',
   tags: '',
   isPublic: 0,
-  parentFolderId: undefined
+  parentFolderId: undefined,
+  showProgress: true
 })
 
 const emit = defineEmits<Emits>()
@@ -156,7 +154,7 @@ const beforeUpload = (file: File) => {
   // 添加到进度列表
   if (!props.autoUpload) {
     uploadProgress.value.push({
-      uid: file.uid || String(Date.now()),
+      uid: String(Date.now()),
       name: file.name,
       percentage: 0,
       status: 'uploading'
@@ -170,7 +168,7 @@ const onSuccess = (response: any, file: UploadUserFile, fileList: UploadFiles) =
   ElMessage.success(`${file.name} 上传成功`)
   
   // 更新进度
-  const progressItem = uploadProgress.value.find(item => item.uid === file.uid)
+  const progressItem = uploadProgress.value.find(item => item.uid === String(file.uid))
   if (progressItem) {
     progressItem.percentage = 100
     progressItem.status = 'success'
@@ -183,7 +181,7 @@ const onError = (error: Error, file: UploadUserFile, fileList: UploadFiles) => {
   ElMessage.error(`${file.name} 上传失败`)
   
   // 更新进度
-  const progressItem = uploadProgress.value.find(item => item.uid === file.uid)
+  const progressItem = uploadProgress.value.find(item => item.uid === String(file.uid))
   if (progressItem) {
     progressItem.status = 'error'
   }
@@ -197,7 +195,7 @@ const onChange = (file: UploadUserFile, fileList: UploadFiles) => {
 
 const onRemove = (file: UploadUserFile, fileList: UploadFiles) => {
   // 从进度列表中移除
-  const index = uploadProgress.value.findIndex(item => item.uid === file.uid)
+  const index = uploadProgress.value.findIndex(item => item.uid === String(file.uid))
   if (index > -1) {
     uploadProgress.value.splice(index, 1)
   }
@@ -205,9 +203,16 @@ const onRemove = (file: UploadUserFile, fileList: UploadFiles) => {
   emit('remove', file, fileList)
 }
 
-const onExceed = (files: File[], fileList: UploadFiles) => {
+const onExceed = (files: File[], uploadFiles: UploadUserFile[]) => {
   ElMessage.warning(`最多只能上传 ${props.limit} 个文件`)
-  emit('exceed', files, fileList)
+  emit('exceed', files, uploadFiles)
+}
+
+// 辅助方法
+const getProgressStatus = (status: string) => {
+  if (status === 'success') return 'success'
+  if (status === 'error') return 'exception'
+  return ''
 }
 
 // 暴露方法

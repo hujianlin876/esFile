@@ -89,25 +89,23 @@ const stats = ref<DashboardStats>({
   totalFiles: 0,
   totalUsers: 0,
   totalSize: 0,
-  recentUploads: 0,
-  recentDownloads: 0,
-  activeUsers: 0
+  todayUploads: 0
 })
 
 const chartData = ref<ChartData>({
-  fileTypeDistribution: [],
-  uploadTrends: { dates: [], values: [] },
-  userActivity: [],
-  storageUsage: { used: 0, total: 0, percentage: 0 }
+  pieData: [],
+  lineData: { dates: [], values: [] }
 })
 
 const activities = ref<Activity[]>([])
 const loading = ref(false)
 const selectedPeriod = ref<'day' | 'week' | 'month'>('week')
+const trendPeriod = ref('7')
+const recentActivities = ref<Activity[]>([])
 
 // 计算属性
-const pieChartOption = computed(() => getPieChartOption(chartData.value.fileTypeDistribution))
-const lineChartOption = computed(() => getLineChartOption(chartData.value.uploadTrends))
+const pieChartOption = computed(() => getPieChartOption(chartData.value?.pieData || []))
+const lineChartOption = computed(() => getLineChartOption(chartData.value?.lineData || { dates: [], values: [] }))
 
 // 方法
 const loadData = async () => {
@@ -119,11 +117,19 @@ const loadData = async () => {
       getRecentActivities(10)
     ])
     
-    stats.value = statsRes.data
-    chartData.value = chartRes.data
-    activities.value = activitiesRes.data
+    stats.value = statsRes.data as unknown as DashboardStats
+    chartData.value = chartRes.data as unknown as ChartData
+    activities.value = activitiesRes.data as unknown as Activity[]
+    recentActivities.value = activitiesRes.data as unknown as Activity[]
   } catch (error) {
     ElMessage.error('加载数据失败')
+    // 确保即使API调用失败，数据也不会变成undefined
+    if (!chartData.value) {
+      chartData.value = {
+        pieData: [],
+        lineData: { dates: [], values: [] }
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -134,15 +140,22 @@ const handlePeriodChange = async (period: 'day' | 'week' | 'month') => {
   selectedPeriod.value = period
   try {
     const response = await getChartData(period)
-    chartData.value = response.data
+    chartData.value = response.data as unknown as ChartData
   } catch (error) {
     ElMessage.error('更新趋势图失败')
+    // 确保即使API调用失败，数据也不会变成undefined
+    if (!chartData.value) {
+      chartData.value = {
+        pieData: [],
+        lineData: { dates: [], values: [] }
+      }
+    }
   }
 }
 
 const loadRecentActivities = async () => {
   try {
-    activities.value = await getRecentActivities()
+    activities.value = await getRecentActivities() as unknown as Activity[]
   } catch (error) {
     ElMessage.error('加载活动记录失败')
   }

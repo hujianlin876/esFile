@@ -1,7 +1,6 @@
 import request from '@/api/request'
 import type { 
   LoginRequest, 
-  LoginResponse, 
   RegisterRequest, 
   ChangePasswordRequest,
   ResetPasswordRequest,
@@ -9,12 +8,17 @@ import type {
   User,
   Captcha
 } from '@/api/types/auth'
+import type { 
+  ApiResponse, 
+  BackendLoginResponse, 
+  BackendUser 
+} from '@/api/types/response'
 
 /**
  * 用户登录
  */
 export const login = (data: LoginRequest) => {
-  return request.post<LoginResponse>('/auth/login', data)
+  return request.post<ApiResponse<BackendLoginResponse>>('/auth/login', data)
 }
 
 /**
@@ -42,7 +46,7 @@ export const refreshToken = (refreshToken: string) => {
  * 获取当前用户信息
  */
 export const getCurrentUser = () => {
-  return request.get<User>('/auth/me')
+  return request.get<ApiResponse<BackendUser>>('/auth/me')
 }
 
 /**

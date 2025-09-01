@@ -72,7 +72,7 @@
               <el-avatar :size="32" :src="userAvatar">
                 {{ userInitials }}
               </el-avatar>
-              <span class="username">{{ userStore.user?.nickname || userStore.user?.username }}</span>
+              <span class="username">{{ authStore.user?.nickname || authStore.user?.username }}</span>
               <el-icon><ArrowDown /></el-icon>
             </div>
             <template #dropdown>

@@ -7,59 +7,39 @@ import java.util.Map;
  * 数据库工具服务接口
  */
 public interface DatabaseToolsService {
-
+    
     /**
      * SQL格式化
      */
     Map<String, Object> formatSql(String sql);
-
+    
     /**
      * 导出查询结果
      */
     Map<String, Object> exportQueryResult(String format, List<Map<String, Object>> data);
-
+    
     /**
      * SQL分析
      */
     Map<String, Object> analyzeSql(String sql);
-
+    
     /**
      * 获取SQL模板
      */
     List<Map<String, Object>> getSqlTemplates();
-
+    
     /**
      * 创建SQL模板
      */
     boolean createSqlTemplate(Map<String, Object> template);
-
+    
     /**
      * 更新SQL模板
      */
     boolean updateSqlTemplate(Long id, Map<String, Object> template);
-
+    
     /**
      * 删除SQL模板
      */
     boolean deleteSqlTemplate(Long id);
-
-    /**
-     * 获取SQL执行历史
-     */
-    List<Map<String, Object>> getSqlHistory(int page, int size);
-
-    /**
-     * 清空SQL执行历史
-     */
-    boolean clearSqlHistory();
-
-    /**
-     * 获取连接池状态
-     */
-    Map<String, Object> getConnectionPoolStatus();
-
-    /**
-     * 重置连接池
-     */
-    boolean resetConnectionPool();
 }

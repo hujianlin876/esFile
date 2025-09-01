@@ -88,9 +88,9 @@
         </el-form-item>
         <el-form-item label="执行模式">
           <el-radio-group v-model="sqlForm.mode">
-            <el-radio label="query">查询模式</el-radio>
-            <el-radio label="update">更新模式</el-radio>
-            <el-radio label="ddl">DDL模式</el-radio>
+            <el-radio label="query">查询模式 (SELECT/SHOW/DESCRIBE)</el-radio>
+            <el-radio label="update">更新模式 (INSERT/UPDATE/DELETE)</el-radio>
+            <el-radio label="ddl">DDL模式 (CREATE/DROP/ALTER)</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="超时时间">
@@ -164,7 +164,7 @@
       </template>
       
       <el-row :gutter="16">
-        <el-col :span="8">
+        <el-col :span="6">
           <el-card class="template-card" shadow="hover">
             <template #header>
               <span>查询表结构</span>
@@ -177,7 +177,7 @@
             </div>
           </el-card>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="6">
           <el-card class="template-card" shadow="hover">
             <template #header>
               <span>查看表数据</span>
@@ -190,7 +190,7 @@
             </div>
           </el-card>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="6">
           <el-card class="template-card" shadow="hover">
             <template #header>
               <span>查看索引</span>
@@ -198,6 +198,74 @@
             <div class="template-content">
               <code>SHOW INDEX FROM table_name;</code>
               <el-button type="text" size="small" @click="useTemplate('SHOW INDEX FROM table_name;')">
+                使用
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card class="template-card" shadow="hover">
+            <template #header>
+              <span>删除表</span>
+            </template>
+            <div class="template-content">
+              <code>DROP TABLE table_name;</code>
+              <el-button type="text" size="small" @click="useTemplate('DROP TABLE table_name;')">
+                使用
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      
+      <el-row :gutter="16" style="margin-top: 16px;">
+        <el-col :span="6">
+          <el-card class="template-card" shadow="hover">
+            <template #header>
+              <span>创建表</span>
+            </template>
+            <div class="template-content">
+              <code>CREATE TABLE table_name (id INT PRIMARY KEY, name VARCHAR(50));</code>
+              <el-button type="text" size="small" @click="useTemplate('CREATE TABLE table_name (id INT PRIMARY KEY, name VARCHAR(50));')">
+                使用
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card class="template-card" shadow="hover">
+            <template #header>
+              <span>插入数据</span>
+            </template>
+            <div class="template-content">
+              <code>INSERT INTO table_name (name) VALUES ('test');</code>
+              <el-button type="text" size="small" @click="useTemplate('INSERT INTO table_name (name) VALUES (test);')">
+                使用
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card class="template-card" shadow="hover">
+            <template #header>
+              <span>更新数据</span>
+            </template>
+            <div class="template-content">
+              <code>UPDATE table_name SET name = 'new_name' WHERE id = 1;</code>
+              <el-button type="text" size="small" @click="useTemplate('UPDATE table_name SET name = new_name WHERE id = 1;')">
+                使用
+              </el-button>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card class="template-card" shadow="hover">
+            <template #header>
+              <span>删除数据</span>
+            </template>
+            <div class="template-content">
+              <code>DELETE FROM table_name WHERE id = 1;</code>
+              <el-button type="text" size="small" @click="useTemplate('DELETE FROM table_name WHERE id = 1;')">
                 使用
               </el-button>
             </div>
@@ -211,7 +279,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { DataBase, Document, TrendCharts, Warning } from '@element-plus/icons-vue'
+import { Document, TrendCharts, Warning } from '@element-plus/icons-vue'
 import { executeSql as executeSqlApi, getDatabaseStats } from '@/api/database/database'
 import { formatSql, exportQueryResult } from '@/api/database/tools'
 
@@ -258,21 +326,22 @@ const executeSql = async () => {
   try {
     const response = await executeSqlApi({
       sql: sqlForm.sql,
-      mode: sqlForm.mode,
+      mode: sqlForm.mode as 'query' | 'update' | 'ddl',
       timeout: sqlForm.timeout
     })
     
+    const resultData = response.data.data as any
     sqlResult.value = {
-      success: response.success,
-      message: response.message,
-      executionTime: response.executionTime,
-      affectedRows: response.affectedRows,
-      resultCount: response.resultCount,
-      data: response.data,
-      error: response.error
+      success: resultData?.success || false,
+      message: resultData?.message || '',
+      executionTime: resultData?.executionTime || 0,
+      affectedRows: resultData?.affectedRows,
+      resultCount: resultData?.resultCount,
+      data: resultData?.data,
+      error: resultData?.error
     }
     
-    if (response.success) {
+    if (response.data.success) {
       ElMessage.success('SQL执行成功')
     } else {
       ElMessage.error('SQL执行失败')
@@ -309,7 +378,7 @@ const handleFormatSql = async () => {
       linesBetweenQueries: 1
     })
     
-    sqlForm.sql = response.data.formattedSql
+    sqlForm.sql = (response.data as any)?.formattedSql || sqlForm.sql
     ElMessage.success('SQL格式化成功')
   } catch (error) {
     ElMessage.error('SQL格式化失败')
@@ -317,14 +386,14 @@ const handleFormatSql = async () => {
 }
 
 const handleExportResult = async () => {
-  if (!sqlResult.value.data || sqlResult.value.data.length === 0) {
+  if (!sqlResult.value?.data || sqlResult.value.data.length === 0) {
     ElMessage.warning('没有可导出的数据')
     return
   }
   
   try {
     const response = await exportQueryResult({
-      data: sqlResult.value.data,
+      data: sqlResult.value?.data || [],
       format: 'excel',
       filename: `查询结果_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`,
       includeHeaders: true,
@@ -332,9 +401,10 @@ const handleExportResult = async () => {
     })
     
     // 下载文件
+    const exportData = response.data as any
     const link = document.createElement('a')
-    link.href = response.data.downloadUrl
-    link.download = response.data.filename
+    link.href = exportData?.downloadUrl || '#'
+    link.download = exportData?.filename || 'export.xlsx'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -356,7 +426,10 @@ const useTemplate = (sql: string) => {
 const loadDbStats = async () => {
   try {
     const response = await getDatabaseStats()
-    Object.assign(dbStats, response.data)
+    const statsData = response.data as any
+    if (statsData) {
+      Object.assign(dbStats, statsData)
+    }
   } catch (error) {
     console.error('加载数据库状态失败:', error)
   }

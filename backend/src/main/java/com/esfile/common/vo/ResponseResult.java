@@ -182,6 +182,16 @@ public class ResponseResult<T> implements Serializable {
     }
 
     /**
+     * 错误响应（自定义消息）
+     *
+     * @param message 响应消息
+     * @return 响应结果
+     */
+    public static <T> ResponseResult<T> error(String message) {
+        return fail(ResponseCodeEnum.FAIL, message);
+    }
+
+    /**
      * 参数错误响应
      *
      * @return 响应结果

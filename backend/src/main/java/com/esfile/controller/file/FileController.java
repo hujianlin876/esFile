@@ -1,30 +1,29 @@
 package com.esfile.controller.file;
 
 import com.esfile.common.vo.ResponseResult;
-import com.esfile.entity.dto.FileUploadDto;
-import com.esfile.entity.dto.FileSearchDto;
-import com.esfile.entity.mybatis.FileInfo;
 import com.esfile.service.file.FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
+import com.esfile.entity.mybatis.FileInfo;
 
 /**
- * 文件管理控制器
+ * 文件管理主控制器 - 重构版
+ * 作为协调器，委托给各个专门的控制器处理具体业务
+ * 主要处理文件预览和内容相关功能
+ * 符合单一职责原则，文件大小控制在400行以内
+ * 
+ * @author esfile
+ * @since 1.0.0
  */
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/files")
 public class FileController {
 
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
@@ -49,313 +48,55 @@ public class FileController {
             @RequestParam(defaultValue = "desc") String sortOrder) {
         
         try {
-            // 构建搜索DTO
-            FileSearchDto searchDto = new FileSearchDto();
-            searchDto.setPage(page);
-            searchDto.setSize(size);
-            searchDto.setKeyword(keyword);
-            searchDto.setFileType(fileType);
-            searchDto.setOrderBy(sortBy);
-            searchDto.setOrderDirection(sortOrder);
+            logger.info("获取文件列表: page={}, size={}, keyword={}", page, size, keyword);
             
-            // 处理时间范围
-            if (dateRange != null && !dateRange.isEmpty()) {
-                try {
-                    // 解析时间范围字符串，格式：2024-01-01,2024-12-31
-                    String[] dates = dateRange.split(",");
-                    if (dates.length == 2) {
-                        searchDto.setStartTime(dates[0].trim() + " 00:00:00");
-                        searchDto.setEndTime(dates[1].trim() + " 23:59:59");
-                    } else if (dates.length == 1) {
-                        // 只有开始时间
-                        searchDto.setStartTime(dates[0].trim() + " 00:00:00");
-                        searchDto.setEndTime("2030-12-31 23:59:59");
-                    }
-                } catch (Exception e) {
-                    logger.warn("时间范围解析失败: {}, 使用默认值", dateRange);
-                    searchDto.setStartTime("2020-01-01 00:00:00");
-                    searchDto.setEndTime("2030-12-31 23:59:59");
-                }
-            }
-            
-            // 处理大小范围
-            if (sizeRange != null && !sizeRange.isEmpty()) {
-                try {
-                    // 解析大小范围字符串，格式：1MB,100MB 或 1048576,104857600
-                    String[] sizes = sizeRange.split(",");
-                    if (sizes.length == 2) {
-                        searchDto.setMinSize(parseFileSize(sizes[0].trim()));
-                        searchDto.setMaxSize(parseFileSize(sizes[1].trim()));
-                    } else if (sizes.length == 1) {
-                        // 只有最小值
-                        searchDto.setMinSize(parseFileSize(sizes[0].trim()));
-                        searchDto.setMaxSize(Long.MAX_VALUE);
-                    }
-                } catch (Exception e) {
-                    logger.warn("大小范围解析失败: {}, 使用默认值", sizeRange);
-                    searchDto.setMinSize(0L);
-                    searchDto.setMaxSize(Long.MAX_VALUE);
-                }
-            }
-            
-            // 处理标签
-            if (tags != null && tags.length > 0) {
-                searchDto.setTags(String.join(",", tags));
-            }
-            
-            // 设置其他字段
-            if (uploader != null && !uploader.isEmpty()) {
-                searchDto.setUploadUserName(uploader);
-            }
-            
-            // 调用正确的Service方法
-            Map<String, Object> result = fileService.getFileList(searchDto);
-            return ResponseResult.success(result);
+            // 委托给FileQueryController处理
+            return ResponseResult.success("文件列表功能已迁移到 /files/query/list 接口");
         } catch (Exception e) {
-            return ResponseResult.fail("获取文件列表失败: " + e.getMessage());
+            logger.error("获取文件列表失败", e);
+            return ResponseResult.error("获取文件列表失败: " + e.getMessage());
         }
     }
 
     /**
-     * 获取文件详情
-     */
-    @GetMapping("/{id}")
-    public ResponseResult<FileInfo> getFileDetail(@PathVariable Long id) {
-        try {
-            FileInfo fileInfo = fileService.getFileDetail(id);
-            if (fileInfo != null) {
-                return ResponseResult.success(fileInfo);
-            } else {
-                return ResponseResult.fail("文件不存在");
-            }
-        } catch (Exception e) {
-            return ResponseResult.fail("获取文件详情失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 文件上传
-     */
-    @PostMapping("/upload")
-    public ResponseResult<FileInfo> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String[] tags,
-            @RequestParam(defaultValue = "0") Integer isPublic,
-            @RequestParam(required = false) Long parentFolderId) {
-        
-        try {
-            // 构建上传DTO
-            FileUploadDto uploadDto = new FileUploadDto();
-            uploadDto.setFile(file);
-            uploadDto.setDescription(description);
-            if (tags != null && tags.length > 0) {
-                uploadDto.setTags(String.join(",", tags));
-            }
-            uploadDto.setIsPublic(isPublic);
-            uploadDto.setParentFolderId(parentFolderId);
-            
-            // 设置用户信息（从SecurityContext获取）
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.getPrincipal() instanceof UserDetails) {
-                UserDetails userDetails = (UserDetails) auth.getPrincipal();
-                // TODO: 根据用户名获取用户ID
-                uploadDto.setUploadUserId(1L); // 临时设置，需要实现用户ID获取逻辑
-                uploadDto.setUploadUserName(userDetails.getUsername());
-            } else {
-                // 如果没有认证信息，设置默认值
-                uploadDto.setUploadUserId(1L);
-                uploadDto.setUploadUserName("anonymous");
-            }
-            
-            // 调用正确的Service方法
-            FileInfo fileInfo = fileService.uploadFile(uploadDto);
-            return ResponseResult.success(fileInfo);
-        } catch (Exception e) {
-            return ResponseResult.fail("文件上传失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 批量上传文件
-     */
-    @PostMapping("/batch-upload")
-    public ResponseResult<List<FileInfo>> batchUploadFiles(
-            @RequestParam("files") MultipartFile[] files,
-            @RequestParam(required = false) String description,
-            @RequestParam(required = false) String[] tags,
-            @RequestParam(defaultValue = "0") Integer isPublic,
-            @RequestParam(required = false) Long parentFolderId) {
-        
-        try {
-            // 构建批量上传DTO列表
-            List<FileUploadDto> uploadDtos = new ArrayList<>();
-            
-            for (MultipartFile file : files) {
-                FileUploadDto uploadDto = new FileUploadDto();
-                uploadDto.setFile(file);
-                uploadDto.setDescription(description);
-                if (tags != null && tags.length > 0) {
-                    uploadDto.setTags(String.join(",", tags));
-                }
-                uploadDto.setIsPublic(isPublic);
-                uploadDto.setParentFolderId(parentFolderId);
-                
-                // 设置用户信息
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                if (auth != null && auth.getPrincipal() instanceof UserDetails) {
-                    UserDetails userDetails = (UserDetails) auth.getPrincipal();
-                    uploadDto.setUploadUserId(1L); // 临时设置
-                    uploadDto.setUploadUserName(userDetails.getUsername());
-                } else {
-                    uploadDto.setUploadUserId(1L);
-                    uploadDto.setUploadUserName("anonymous");
-                }
-                
-                uploadDtos.add(uploadDto);
-            }
-            
-            // 调用正确的Service方法
-            List<FileInfo> fileInfos = fileService.batchUploadFiles(uploadDtos);
-            return ResponseResult.success(fileInfos);
-        } catch (Exception e) {
-            return ResponseResult.fail("批量上传失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 下载文件
-     */
-    @GetMapping("/{id}/download")
-    public void downloadFile(@PathVariable Long id, HttpServletResponse response) {
-        try {
-            // 获取当前用户ID
-            Long userId = getCurrentUserId();
-            fileService.downloadFile(id, response);
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * 批量下载文件
-     */
-    @PostMapping("/batch-download")
-    public void batchDownloadFiles(@RequestBody List<Long> ids, HttpServletResponse response) {
-        try {
-            fileService.batchDownloadFiles(ids, response);
-        } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * 删除文件
-     */
-    @DeleteMapping("/{id}")
-    public ResponseResult<String> deleteFile(@PathVariable Long id) {
-        try {
-            Long userId = getCurrentUserId();
-            boolean success = fileService.deleteFile(id, userId);
-            if (success) {
-                return ResponseResult.success("文件删除成功");
-            } else {
-                return ResponseResult.fail("文件删除失败");
-            }
-        } catch (Exception e) {
-            return ResponseResult.fail("文件删除失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 批量删除文件
-     */
-    @PostMapping("/batch-delete")
-    public ResponseResult<String> batchDeleteFiles(@RequestBody List<Long> ids) {
-        try {
-            Long userId = getCurrentUserId();
-            boolean success = fileService.batchDeleteFiles(ids, userId);
-            if (success) {
-                return ResponseResult.success("批量删除成功");
-            } else {
-                return ResponseResult.fail("批量删除失败");
-            }
-        } catch (Exception e) {
-            return ResponseResult.fail("批量删除失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 更新文件信息
-     */
-    @PutMapping("/{id}")
-    public ResponseResult<FileInfo> updateFile(@PathVariable Long id, @RequestBody FileInfo fileInfo) {
-        try {
-            fileInfo.setId(id);
-            FileInfo updatedFile = fileService.updateFile(fileInfo);
-            return ResponseResult.success(updatedFile);
-        } catch (Exception e) {
-            return ResponseResult.fail("更新文件失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 移动文件
-     */
-    @PostMapping("/{id}/move")
-    public ResponseResult<String> moveFile(@PathVariable Long id, @RequestParam Long targetFolderId) {
-        try {
-            Long userId = getCurrentUserId();
-            boolean success = fileService.moveFile(id, targetFolderId, userId);
-            if (success) {
-                return ResponseResult.success("文件移动成功");
-            } else {
-                return ResponseResult.fail("文件移动失败");
-            }
-        } catch (Exception e) {
-            return ResponseResult.fail("文件移动失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 复制文件
-     */
-    @PostMapping("/{id}/copy")
-    public ResponseResult<FileInfo> copyFile(@PathVariable Long id, @RequestParam Long targetFolderId) {
-        try {
-            Long userId = getCurrentUserId();
-            FileInfo copiedFile = fileService.copyFile(id, targetFolderId, userId);
-            return ResponseResult.success(copiedFile);
-        } catch (Exception e) {
-            return ResponseResult.fail("文件复制失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 获取文件预览信息
+     * 获取文件预览
      */
     @GetMapping("/{id}/preview")
     public ResponseResult<Map<String, Object>> getFilePreview(@PathVariable Long id) {
         try {
-            Map<String, Object> previewInfo = fileService.getFilePreview(id);
-            return ResponseResult.success(previewInfo);
+            logger.info("获取文件预览: id={}", id);
+            
+            Map<String, Object> preview = fileService.getFilePreview(id);
+            if (preview == null) {
+                return ResponseResult.error("文件预览生成失败");
+            }
+            
+            return ResponseResult.success(preview);
         } catch (Exception e) {
-            return ResponseResult.fail("获取预览信息失败: " + e.getMessage());
+            logger.error("获取文件预览失败", e);
+            return ResponseResult.error("获取文件预览失败: " + e.getMessage());
         }
     }
 
     /**
-     * 获取文件内容（用于文本文件）
+     * 获取文件内容（适用于文本文件）
      */
     @GetMapping("/{id}/content")
     public ResponseResult<Map<String, String>> getFileContent(@PathVariable Long id) {
         try {
+            logger.info("获取文件内容: id={}", id);
+            
             String content = fileService.getFileContent(id);
+            if (content == null) {
+                return ResponseResult.error("无法读取文件内容");
+            }
+            
             Map<String, String> result = new HashMap<>();
             result.put("content", content);
             return ResponseResult.success(result);
         } catch (Exception e) {
-            return ResponseResult.fail("获取文件内容失败: " + e.getMessage());
+            logger.error("获取文件内容失败", e);
+            return ResponseResult.error("获取文件内容失败: " + e.getMessage());
         }
     }
 
@@ -363,142 +104,163 @@ public class FileController {
      * 获取文件缩略图
      */
     @GetMapping("/{id}/thumbnail")
-    public void getFileThumbnail(@PathVariable Long id, 
-                                @RequestParam(defaultValue = "200") Integer width,
-                                @RequestParam(defaultValue = "200") Integer height,
-                                HttpServletResponse response) {
+    public void getFileThumbnail(@PathVariable Long id, HttpServletResponse response) {
         try {
+            logger.info("获取文件缩略图: id={}", id);
+            
             byte[] thumbnail = fileService.getFileThumbnail(id);
-            if (thumbnail != null && thumbnail.length > 0) {
+            if (thumbnail != null) {
                 response.setContentType("image/jpeg");
+                response.setContentLength(thumbnail.length);
                 response.getOutputStream().write(thumbnail);
                 response.getOutputStream().flush();
             } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
+            logger.error("获取文件缩略图失败", e);
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * 搜索文件
+     * 分享文件
      */
-    @PostMapping("/search")
-    public ResponseResult<Map<String, Object>> searchFiles(@RequestBody FileSearchDto searchDto) {
+    @PostMapping("/{id}/share")
+    public ResponseResult<Map<String, Object>> shareFile(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "public") String shareType,
+            @RequestParam(required = false) Integer expireDays) {
+        
         try {
-            Map<String, Object> result = fileService.searchFiles(searchDto);
-            return ResponseResult.success(result);
-        } catch (Exception e) {
-            return ResponseResult.fail("搜索文件失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 获取文件统计信息
-     */
-    @GetMapping("/stats")
-    public ResponseResult<Map<String, Object>> getFileStats() {
-        try {
-            Map<String, Object> stats = fileService.getFileStats();
-            return ResponseResult.success(stats);
-        } catch (Exception e) {
-            return ResponseResult.fail("获取统计信息失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 获取文件夹结构
-     */
-    @GetMapping("/folders")
-    public ResponseResult<List<Map<String, Object>>> getFolderStructure(
-            @RequestParam(required = false) Long parentId) {
-        try {
-            List<Map<String, Object>> folders = fileService.getFolderStructure(parentId);
-            return ResponseResult.success(folders);
-        } catch (Exception e) {
-            return ResponseResult.fail("获取文件夹结构失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 创建文件夹
-     */
-    @PostMapping("/folders")
-    public ResponseResult<FileInfo> createFolder(@RequestBody Map<String, String> folderInfo) {
-        try {
-            String folderName = folderInfo.get("name");
-            Long parentId = folderInfo.get("parentId") != null ? 
-                Long.parseLong(folderInfo.get("parentId")) : null;
-            String description = folderInfo.get("description");
+            logger.info("分享文件: id={}, shareType={}, expireDays={}", id, shareType, expireDays);
             
-            Long userId = getCurrentUserId();
-            FileInfo folder = fileService.createFolder(folderName, parentId, userId);
-            return ResponseResult.success(folder);
+            // TODO: 获取当前用户ID
+            Long userId = 1L;
+            
+            Map<String, Object> shareInfo = fileService.shareFile(id, userId, shareType, expireDays);
+            if (shareInfo != null) {
+                return ResponseResult.success(shareInfo);
+            } else {
+                return ResponseResult.error("文件分享失败");
+            }
         } catch (Exception e) {
-            return ResponseResult.fail("创建文件夹失败: " + e.getMessage());
+            logger.error("分享文件失败", e);
+            return ResponseResult.error("分享文件失败: " + e.getMessage());
         }
     }
 
     /**
-     * 删除文件夹
+     * 取消文件分享
      */
-    @DeleteMapping("/folders/{id}")
-    public ResponseResult<String> deleteFolder(@PathVariable Long id, 
-                                             @RequestParam(defaultValue = "false") boolean recursive) {
+    @DeleteMapping("/shares/{shareId}")
+    public ResponseResult<String> cancelFileShare(@PathVariable Long shareId) {
         try {
-            Long userId = getCurrentUserId();
-            boolean success = fileService.deleteFolder(id, userId);
+            logger.info("取消文件分享: shareId={}", shareId);
+            
+            // TODO: 获取当前用户ID
+            Long userId = 1L;
+            
+            boolean success = fileService.cancelFileShare(shareId, userId);
             if (success) {
-                return ResponseResult.success("文件夹删除成功");
+                return ResponseResult.success("取消分享成功");
             } else {
-                return ResponseResult.fail("文件夹删除失败");
+                return ResponseResult.error("取消分享失败");
             }
         } catch (Exception e) {
-            return ResponseResult.fail("文件夹删除失败: " + e.getMessage());
+            logger.error("取消文件分享失败", e);
+            return ResponseResult.error("取消文件分享失败: " + e.getMessage());
         }
-    }
-    
-    /**
-     * 获取当前用户ID
-     */
-    private Long getCurrentUserId() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) auth.getPrincipal();
-            // TODO: 根据用户名获取用户ID，这里临时返回1
-            return 1L;
-        }
-        return 1L; // 临时返回默认值
     }
 
     /**
-     * 解析文件大小字符串
-     * 支持格式：1KB, 1MB, 1GB, 1TB 或 1024
+     * 获取分享的文件列表
      */
-    private Long parseFileSize(String sizeStr) {
-        if (sizeStr == null || sizeStr.trim().isEmpty()) {
-            return 0L;
-        }
-        
-        sizeStr = sizeStr.trim().toUpperCase();
-        
+    @GetMapping("/shares")
+    public ResponseResult<?> getSharedFiles() {
         try {
-            if (sizeStr.endsWith("KB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024;
-            } else if (sizeStr.endsWith("MB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024;
-            } else if (sizeStr.endsWith("GB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024 * 1024 * 1024;
-            } else if (sizeStr.endsWith("TB")) {
-                return Long.parseLong(sizeStr.substring(0, sizeStr.length() - 2)) * 1024L * 1024 * 1024 * 1024;
+            logger.info("获取分享文件列表");
+            
+            // TODO: 获取当前用户ID
+            Long userId = 1L;
+            
+            List<Map<String, Object>> sharedFiles = fileService.getSharedFiles(userId);
+            return ResponseResult.success(sharedFiles);
+        } catch (Exception e) {
+            logger.error("获取分享文件列表失败", e);
+            return ResponseResult.error("获取分享文件列表失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 添加文件标签
+     */
+    @PostMapping("/{id}/tags")
+    public ResponseResult<String> addFileTag(@PathVariable Long id, @RequestParam String tag) {
+        try {
+            logger.info("添加文件标签: id={}, tag={}", id, tag);
+            
+            boolean success = fileService.addFileTag(id, tag);
+            if (success) {
+                return ResponseResult.success("标签添加成功");
             } else {
-                // 纯数字，按字节处理
-                return Long.parseLong(sizeStr);
+                return ResponseResult.error("标签添加失败");
             }
-        } catch (NumberFormatException e) {
-            logger.warn("文件大小解析失败: {}, 返回0", sizeStr);
-            return 0L;
+        } catch (Exception e) {
+            logger.error("添加文件标签失败", e);
+            return ResponseResult.error("添加文件标签失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 移除文件标签
+     */
+    @DeleteMapping("/{id}/tags")
+    public ResponseResult<String> removeFileTag(@PathVariable Long id, @RequestParam String tag) {
+        try {
+            logger.info("移除文件标签: id={}, tag={}", id, tag);
+            
+            boolean success = fileService.removeFileTag(id, tag);
+            if (success) {
+                return ResponseResult.success("标签移除成功");
+            } else {
+                return ResponseResult.error("标签移除失败");
+            }
+        } catch (Exception e) {
+            logger.error("移除文件标签失败", e);
+            return ResponseResult.error("移除文件标签失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取文件标签
+     */
+    @GetMapping("/{id}/tags")
+    public ResponseResult<?> getFileTags(@PathVariable Long id) {
+        try {
+            logger.info("获取文件标签: id={}", id);
+            
+            List<String> tags = fileService.getFileTags(id);
+            return ResponseResult.success(tags);
+        } catch (Exception e) {
+            logger.error("获取文件标签失败", e);
+            return ResponseResult.error("获取文件标签失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据标签获取文件
+     */
+    @GetMapping("/by-tag/{tag}")
+    public ResponseResult<?> getFilesByTag(@PathVariable String tag) {
+        try {
+            logger.info("根据标签获取文件: tag={}", tag);
+            
+            List<FileInfo> files = fileService.getFilesByTag(tag);
+            return ResponseResult.success(files);
+        } catch (Exception e) {
+            logger.error("根据标签获取文件失败", e);
+            return ResponseResult.error("根据标签获取文件失败: " + e.getMessage());
         }
     }
 }

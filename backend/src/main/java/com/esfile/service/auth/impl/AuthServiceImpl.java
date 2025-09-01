@@ -6,6 +6,7 @@ import com.esfile.entity.mybatis.User;
 import com.esfile.mapper.UserMapper;
 import com.esfile.service.auth.AuthService;
 import com.esfile.util.PasswordUtil;
+import com.esfile.common.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     public String login(LoginDto loginDto) {
@@ -42,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 检查用户状态
-        if (!"ACTIVE".equals(user.getStatus())) {
+        if (!Integer.valueOf(1).equals(user.getStatus())) {
             throw new RuntimeException("用户已被禁用");
         }
 
@@ -81,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(PasswordUtil.encrypt(registerDto.getPassword()));
         user.setEmail(registerDto.getEmail());
         user.setNickname(registerDto.getUsername());
-        user.setStatus("ACTIVE");
+        user.setStatus(1); // 1-激活状态
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
         user.setLoginFailCount(0);
@@ -109,14 +113,40 @@ public class AuthServiceImpl implements AuthService {
      * 生成JWT Token
      */
     private String generateJwtToken(User user) {
-        // TODO: 实现JWT Token生成逻辑
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getId());
-        claims.put("username", user.getUsername());
-        claims.put("email", user.getEmail());
-        
-        // 这里应该调用JWT工具类生成Token
-        // 暂时返回一个模拟的Token
-        return "jwt-token-" + user.getId() + "-" + System.currentTimeMillis();
+        // 使用JWT工具类生成真正的Token
+        return jwtUtil.generateToken(user.getId().toString(), user.getUsername());
+    }
+
+    @Override
+    public Map<String, Object> getCurrentUserInfo(String userId) {
+        try {
+            Long id = Long.parseLong(userId);
+            User user = userMapper.selectById(id);
+            
+            if (user == null) {
+                throw new RuntimeException("用户不存在");
+            }
+            
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("username", user.getUsername());
+            userInfo.put("nickname", user.getNickname());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("phone", user.getPhone());
+            userInfo.put("avatar", user.getAvatar());
+            userInfo.put("gender", user.getGender());
+            userInfo.put("status", user.getStatus());
+            userInfo.put("deptId", user.getDeptId());
+            userInfo.put("createTime", user.getCreateTime());
+            userInfo.put("updateTime", user.getUpdateTime());
+            
+            // 添加角色和权限信息（暂时使用默认值）
+            userInfo.put("roles", new String[]{"USER"});
+            userInfo.put("permissions", new String[]{"file:read", "file:upload"});
+            
+            return userInfo;
+        } catch (Exception e) {
+            throw new RuntimeException("获取用户信息失败: " + e.getMessage());
+        }
     }
 }

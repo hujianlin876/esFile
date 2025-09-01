@@ -89,13 +89,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
         
-        // 不需要过滤的路径
-        return path.startsWith("/api/auth/") || 
+        // 不需要过滤的路径（只跳过登录和注册）
+        return path.equals("/api/auth/login") || 
+               path.equals("/api/auth/register") ||
                path.startsWith("/swagger-ui/") || 
                path.startsWith("/swagger-resources/") || 
                path.startsWith("/v2/api-docs") || 
                path.startsWith("/v3/api-docs") ||
                path.equals("/error") ||
-               path.equals("/health");
+               path.startsWith("/health");
     }
 }

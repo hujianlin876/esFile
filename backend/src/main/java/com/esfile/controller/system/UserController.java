@@ -15,7 +15,7 @@ import java.util.Map;
  * 用户管理控制器
  */
 @RestController
-@RequestMapping("/api/system/users")
+@RequestMapping("/system/users")
 public class UserController {
 
     @Autowired

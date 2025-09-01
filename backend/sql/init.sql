@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS sys_user (
     status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
     last_login_time TIMESTAMP NULL COMMENT '最后登录时间',
     last_login_ip VARCHAR(50) COMMENT '最后登录IP',
+    login_fail_count INT DEFAULT 0 COMMENT '登录失败次数',
+    account_locked TINYINT DEFAULT 0 COMMENT '账户是否锁定：0-否，1-是',
+    lock_time TIMESTAMP NULL COMMENT '锁定时间',
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
@@ -69,6 +72,33 @@ CREATE TABLE IF NOT EXISTS sys_permission (
     INDEX idx_status (status),
     INDEX idx_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='权限表';
+
+-- 菜单表
+CREATE TABLE IF NOT EXISTS sys_menu (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '菜单ID',
+    name VARCHAR(50) NOT NULL COMMENT '菜单名称',
+    path VARCHAR(255) COMMENT '菜单路径',
+    component VARCHAR(255) COMMENT '组件路径',
+    icon VARCHAR(100) COMMENT '菜单图标',
+    parent_id BIGINT DEFAULT 0 COMMENT '父菜单ID',
+    sort INT DEFAULT 0 COMMENT '排序',
+    status TINYINT DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+    type TINYINT DEFAULT 1 COMMENT '菜单类型：1-目录，2-菜单，3-按钮',
+    permission VARCHAR(100) COMMENT '权限标识',
+    is_frame TINYINT DEFAULT 0 COMMENT '是否外链：0-否，1-是',
+    is_cache TINYINT DEFAULT 0 COMMENT '是否缓存：0-否，1-是',
+    visible TINYINT DEFAULT 1 COMMENT '是否可见：0-否，1-是',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    create_by VARCHAR(50) COMMENT '创建者',
+    update_by VARCHAR(50) COMMENT '更新者',
+    remark VARCHAR(500) COMMENT '备注',
+    deleted TINYINT DEFAULT 0 COMMENT '是否删除：0-否，1-是',
+    INDEX idx_parent_id (parent_id),
+    INDEX idx_status (status),
+    INDEX idx_type (type),
+    INDEX idx_deleted (deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='菜单表';
 
 -- 用户角色关联表
 CREATE TABLE IF NOT EXISTS sys_user_role (
@@ -147,6 +177,68 @@ CREATE TABLE IF NOT EXISTS sys_config (
     INDEX idx_deleted (deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
 
+-- 操作日志表
+CREATE TABLE IF NOT EXISTS sys_operation_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    user_id BIGINT COMMENT '操作用户ID',
+    username VARCHAR(50) COMMENT '操作用户名',
+    operation VARCHAR(100) NOT NULL COMMENT '操作类型',
+    method VARCHAR(255) COMMENT '请求方法',
+    request_uri VARCHAR(500) COMMENT '请求URI',
+    request_method VARCHAR(10) COMMENT '请求方法',
+    request_params TEXT COMMENT '请求参数',
+    response_result TEXT COMMENT '响应结果',
+    ip_address VARCHAR(50) COMMENT 'IP地址',
+    user_agent VARCHAR(500) COMMENT '用户代理',
+    status TINYINT DEFAULT 1 COMMENT '操作状态：0-失败，1-成功',
+    error_message TEXT COMMENT '错误信息',
+    execution_time BIGINT COMMENT '执行时间（毫秒）',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_operation (operation),
+    INDEX idx_create_time (create_time),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志表';
+
+-- SQL执行日志表
+CREATE TABLE IF NOT EXISTS sys_sql_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    user_id BIGINT COMMENT '执行用户ID',
+    username VARCHAR(50) COMMENT '执行用户名',
+    sql_statement TEXT NOT NULL COMMENT 'SQL语句',
+    sql_type VARCHAR(20) COMMENT 'SQL类型：SELECT, INSERT, UPDATE, DELETE, DDL',
+    execution_time BIGINT COMMENT '执行时间（毫秒）',
+    affected_rows INT COMMENT '影响行数',
+    result_count INT COMMENT '结果行数',
+    status TINYINT DEFAULT 1 COMMENT '执行状态：0-失败，1-成功',
+    error_message TEXT COMMENT '错误信息',
+    ip_address VARCHAR(50) COMMENT 'IP地址',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_sql_type (sql_type),
+    INDEX idx_create_time (create_time),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SQL执行日志表';
+
+-- 文件操作日志表
+CREATE TABLE IF NOT EXISTS sys_file_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    user_id BIGINT COMMENT '操作用户ID',
+    username VARCHAR(50) COMMENT '操作用户名',
+    file_id BIGINT COMMENT '文件ID',
+    file_name VARCHAR(255) COMMENT '文件名',
+    operation VARCHAR(50) NOT NULL COMMENT '操作类型：UPLOAD, DOWNLOAD, PREVIEW, DELETE',
+    operation_result TINYINT DEFAULT 1 COMMENT '操作结果：0-失败，1-成功',
+    error_message TEXT COMMENT '错误信息',
+    ip_address VARCHAR(50) COMMENT 'IP地址',
+    user_agent VARCHAR(500) COMMENT '用户代理',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_user_id (user_id),
+    INDEX idx_file_id (file_id),
+    INDEX idx_operation (operation),
+    INDEX idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件操作日志表';
+
 -- 插入初始数据
 
 -- 插入超级管理员用户（密码：admin123）
@@ -179,6 +271,26 @@ INSERT INTO sys_permission (permission_name, permission_code, permission_type, p
 ('数据库操作', 'DATABASE_OPERATION', 1, '/database', '数据库操作模块', 0, 3, 1),
 ('SQL执行', 'SQL_EXECUTE', 1, '/database/sql', 'SQL执行', 11, 1, 1);
 
+-- 插入系统菜单
+INSERT INTO sys_menu (name, path, component, icon, parent_id, sort, status, type, permission) VALUES 
+-- 系统管理菜单
+('系统管理', '/system', 'Layout', 'system', 0, 1, 1, 1, 'SYSTEM_MANAGE'),
+('用户管理', '/system/user', 'system/user/index', 'user', 1, 1, 1, 2, 'USER_MANAGE'),
+('角色管理', '/system/role', 'system/role/index', 'role', 1, 2, 1, 2, 'ROLE_MANAGE'),
+('权限管理', '/system/permission', 'system/permission/index', 'permission', 1, 3, 1, 2, 'PERMISSION_MANAGE'),
+('系统配置', '/system/config', 'system/config/index', 'config', 1, 4, 1, 2, 'SYSTEM_CONFIG'),
+
+-- 文件管理菜单
+('文件管理', '/file', 'Layout', 'file', 0, 2, 1, 1, 'FILE_MANAGE'),
+('文件上传', '/file/upload', 'file/upload/index', 'upload', 6, 1, 1, 2, 'FILE_UPLOAD'),
+('文件下载', '/file/download', 'file/download/index', 'download', 6, 2, 1, 2, 'FILE_DOWNLOAD'),
+('文件预览', '/file/preview', 'file/preview/index', 'preview', 6, 3, 1, 2, 'FILE_PREVIEW'),
+('文件搜索', '/file/search', 'file/search/index', 'search', 6, 4, 1, 2, 'FILE_SEARCH'),
+
+-- 数据库操作菜单
+('数据库操作', '/database', 'Layout', 'database', 0, 3, 1, 1, 'DATABASE_OPERATION'),
+('SQL执行', '/database/sql', 'database/sql/index', 'sql', 11, 1, 1, 2, 'SQL_EXECUTE');
+
 -- 插入用户角色关联
 INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
 
@@ -193,4 +305,9 @@ INSERT INTO sys_config (config_key, config_value, description, config_type) VALU
 ('FILE_UPLOAD_MAX_SIZE', '1073741824', '文件上传最大大小（字节）', 2),
 ('FILE_ALLOWED_TYPES', 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar', '允许上传的文件类型', 2),
 ('MINIO_BUCKET_NAME', 'elasticsearch', 'MinIO存储桶名称', 1),
-('ELASTICSEARCH_INDEX_PREFIX', 'esfile', 'Elasticsearch索引前缀', 1);
+('ELASTICSEARCH_INDEX_PREFIX', 'esfile', 'Elasticsearch索引前缀', 1),
+('LOGIN_MAX_ATTEMPTS', '5', '最大登录尝试次数', 1),
+('ACCOUNT_LOCK_DURATION', '30', '账户锁定时间（分钟）', 1),
+('SESSION_TIMEOUT', '1800', '会话超时时间（秒）', 1),
+('PASSWORD_MIN_LENGTH', '6', '密码最小长度', 1),
+('PASSWORD_COMPLEXITY', '1', '密码复杂度要求：0-无，1-基本', 1);

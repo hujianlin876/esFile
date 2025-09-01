@@ -1,0 +1,70 @@
+# 环境变量配置示例
+# 复制此文件为 .env 并修改相应的配置值
+
+# 数据库配置 (使用您现有的服务器配置)
+DB_URL=jdbc:mysql://139.224.67.165:11006/esfile?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+DB_USERNAME=root
+DB_PASSWORD=hujianlin
+DB_POOL_MAX_SIZE=20
+DB_POOL_MIN_IDLE=5
+
+# Redis配置 (使用您现有的服务器配置)
+REDIS_HOST=139.224.67.165
+REDIS_PORT=11001
+REDIS_PASSWORD=hujianlin
+REDIS_DATABASE=0
+REDIS_POOL_MAX_ACTIVE=10
+
+# Elasticsearch配置 (使用您现有的服务器配置)
+ES_CLUSTER_NAME=elasticsearch
+ES_CLUSTER_NODES=139.224.67.165:11015
+ES_USERNAME=elastic
+ES_PASSWORD=hujianlin
+
+# MinIO配置 (使用您现有的服务器配置)
+MINIO_ENDPOINT=http://139.224.67.165:11004
+MINIO_ACCESS_KEY=hujianlin
+MINIO_SECRET_KEY=hujianlin
+MINIO_BUCKET=elasticsearch
+
+# JWT配置
+JWT_SECRET=your_jwt_secret_key_here_at_least_32_characters
+JWT_EXPIRATION=86400000
+JWT_HEADER=Authorization
+
+# 文件上传配置
+FILE_MAX_SIZE=-1
+FILE_CHUNK_SIZE=1048576
+FILE_TEMP_DIR=/tmp/upload
+
+# 日志配置
+LOG_LEVEL_ROOT=INFO
+LOG_LEVEL_APP=INFO
+LOG_LEVEL_SECURITY=WARN
+LOG_FILE_NAME=logs/esfile-backend.log
+LOG_FILE_MAX_SIZE=100MB
+LOG_FILE_MAX_HISTORY=30
+
+# 服务器配置
+SERVER_PORT=8080
+SERVER_CONTEXT_PATH=/api
+
+# 存储配置
+STORAGE_PATH_TEMPLATE=files/{userId}/{year}/{month}/{day}/{filename}
+STORAGE_DEDUPLICATION=true
+STORAGE_COMPRESSION=false
+STORAGE_ENCRYPTION=false
+STORAGE_RETENTION_DAYS=3650
+STORAGE_VERSIONING=true
+STORAGE_MAX_VERSIONS=5
+
+# 安全配置
+CORS_ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE,OPTIONS
+CORS_ALLOWED_HEADERS=*
+CORS_ALLOW_CREDENTIALS=true
+
+# 限流配置
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_RPS=10
+RATE_LIMIT_BURST=20

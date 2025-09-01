@@ -1,0 +1,101 @@
+# 生产环境配置
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/esfile?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REDIS_DATABASE:0}
+    timeout: ${REDIS_TIMEOUT:3000ms}
+    lettuce:
+      pool:
+        max-active: ${REDIS_POOL_MAX_ACTIVE:10}
+        max-idle: ${REDIS_POOL_MAX_IDLE:10}
+        min-idle: ${REDIS_POOL_MIN_IDLE:0}
+        max-wait: ${REDIS_POOL_MAX_WAIT:-1ms}
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+      cluster-name: ${ES_CLUSTER_NAME:elasticsearch}
+      cluster-nodes: ${ES_CLUSTER_NODES:localhost:9200}
+      username: ${ES_USERNAME:}
+      password: ${ES_PASSWORD:}
+
+# MinIO配置
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:}
+  bucket: ${MINIO_BUCKET:esfile}
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration: ${JWT_EXPIRATION:86400000}
+  header: ${JWT_HEADER:Authorization}
+
+# 文件上传配置
+file:
+  upload:
+    max-size: ${FILE_MAX_SIZE:-1}
+    chunk-size: ${FILE_CHUNK_SIZE:1048576}
+    temp-dir: ${FILE_TEMP_DIR:/tmp/upload}
+
+# 日志配置
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    com.esfile: ${LOG_LEVEL_APP:INFO}
+    org.springframework.security: ${LOG_LEVEL_SECURITY:WARN}
+    org.mybatis: ${LOG_LEVEL_MYBATIS:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  file:
+    name: ${LOG_FILE_NAME:logs/esfile-backend-prod.log}
+    max-size: ${LOG_FILE_MAX_SIZE:100MB}
+    max-history: ${LOG_FILE_MAX_HISTORY:30}
+  logback:
+    rollingpolicy:
+      max-file-size: ${LOG_FILE_MAX_SIZE:100MB}
+      max-history: ${LOG_FILE_MAX_HISTORY:30}
+      total-size-cap: ${LOG_TOTAL_SIZE_CAP:3GB}
+
+# 服务器配置
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: ${SERVER_CONTEXT_PATH:/api}
+
+# 存储策略配置
+storage:
+  path-template: ${STORAGE_PATH_TEMPLATE:files/{userId}/{year}/{month}/{day}/{filename}}
+  deduplication: ${STORAGE_DEDUPLICATION:true}
+  compression: ${STORAGE_COMPRESSION:false}
+  encryption: ${STORAGE_ENCRYPTION:false}
+  retention-days: ${STORAGE_RETENTION_DAYS:3650}
+  versioning: ${STORAGE_VERSIONING:true}
+  max-versions: ${STORAGE_MAX_VERSIONS:5}
+
+# 安全配置
+security:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    allowed-methods: ${CORS_ALLOWED_METHODS:GET,POST,PUT,DELETE,OPTIONS}
+    allowed-headers: ${CORS_ALLOWED_HEADERS:*}
+    allow-credentials: ${CORS_ALLOW_CREDENTIALS:true}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    requests-per-second: ${RATE_LIMIT_RPS:10}
+    burst-capacity: ${RATE_LIMIT_BURST:20}
+

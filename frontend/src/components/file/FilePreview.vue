@@ -1,17 +1,18 @@
 <template>
   <div class="file-preview-component">
     <el-dialog
-      v-model="visible"
-      :title="`预览文件 - ${file?.name}`"
+      :model-value="visible"
+      :title="`预览文件 - ${file?.fileName}`"
       width="80%"
       :before-close="handleClose"
+      @update:model-value="$emit('update:visible', $event)"
     >
       <div class="preview-content">
         <!-- 图片预览 -->
         <div v-if="isImage" class="image-preview">
           <el-image
-            :src="file?.preview || file?.url"
-            :preview-src-list="[file?.preview || file?.url]"
+            :src="file?.fileUrl"
+            :preview-src-list="file?.fileUrl ? [file.fileUrl] : []"
             fit="contain"
             style="max-width: 100%; max-height: 500px;"
           />
@@ -20,7 +21,7 @@
         <!-- PDF预览 -->
         <div v-else-if="isPdf" class="pdf-preview">
           <iframe
-            :src="file?.preview || file?.url"
+            :src="file?.fileUrl"
             width="100%"
             height="500"
             frameborder="0"
@@ -30,7 +31,7 @@
         <!-- 视频预览 -->
         <div v-else-if="isVideo" class="video-preview">
           <video
-            :src="file?.url"
+            :src="file?.fileUrl"
             controls
             style="max-width: 100%; max-height: 500px;"
           >
@@ -41,7 +42,7 @@
         <!-- 音频预览 -->
         <div v-else-if="isAudio" class="audio-preview">
           <audio
-            :src="file?.url"
+            :src="file?.fileUrl"
             controls
             style="width: 100%;"
           >
@@ -77,11 +78,11 @@
       <!-- 文件信息 -->
       <div class="file-info">
         <el-descriptions :column="3" border>
-          <el-descriptions-item label="文件名">{{ file?.name }}</el-descriptions-item>
-          <el-descriptions-item label="文件大小">{{ formatFileSize(file?.size || 0) }}</el-descriptions-item>
-          <el-descriptions-item label="文件类型">{{ file?.type }}</el-descriptions-item>
-          <el-descriptions-item label="上传时间">{{ formatTime(file?.createTime) }}</el-descriptions-item>
-          <el-descriptions-item label="上传者">{{ file?.uploader }}</el-descriptions-item>
+          <el-descriptions-item label="文件名">{{ file?.fileName }}</el-descriptions-item>
+          <el-descriptions-item label="文件大小">{{ formatFileSize(file?.fileSize || 0) }}</el-descriptions-item>
+          <el-descriptions-item label="文件类型">{{ file?.fileType }}</el-descriptions-item>
+          <el-descriptions-item label="上传时间">{{ formatTime(file?.createTime || '') }}</el-descriptions-item>
+          <el-descriptions-item label="上传者">{{ file?.uploadUserName }}</el-descriptions-item>
           <el-descriptions-item label="下载次数">{{ file?.downloadCount || 0 }}</el-descriptions-item>
         </el-descriptions>
       </div>
@@ -123,31 +124,31 @@ const textContent = ref('')
 const isImage = computed(() => {
   if (!props.file) return false
   const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp']
-  return imageTypes.includes(props.file.mimeType) || props.file.type === 'image'
+  return imageTypes.includes(props.file.fileType) || props.file.fileType === 'image'
 })
 
 const isPdf = computed(() => {
   if (!props.file) return false
-  return props.file.mimeType === 'application/pdf' || props.file.extension === 'pdf'
+  return props.file.fileType === 'application/pdf' || props.file.fileExtension === 'pdf'
 })
 
 const isVideo = computed(() => {
   if (!props.file) return false
   const videoTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/flv']
-  return videoTypes.includes(props.file.mimeType) || props.file.type === 'video'
+  return videoTypes.includes(props.file.fileType) || props.file.fileType === 'video'
 })
 
 const isAudio = computed(() => {
   if (!props.file) return false
   const audioTypes = ['audio/mp3', 'audio/wav', 'audio/flac', 'audio/aac', 'audio/ogg']
-  return audioTypes.includes(props.file.mimeType) || props.file.type === 'audio'
+  return audioTypes.includes(props.file.fileType) || props.file.fileType === 'audio'
 })
 
 const isText = computed(() => {
   if (!props.file) return false
   const textTypes = ['text/plain', 'text/html', 'text/css', 'text/javascript', 'application/json']
   const textExtensions = ['txt', 'md', 'html', 'css', 'js', 'json', 'xml', 'log']
-  return textTypes.includes(props.file.mimeType) || textExtensions.includes(props.file.extension)
+  return textTypes.includes(props.file.fileType) || textExtensions.includes(props.file.fileExtension)
 })
 
 // 方法

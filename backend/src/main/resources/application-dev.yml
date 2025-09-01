@@ -1,9 +1,9 @@
 # 开发环境配置
 spring:
   datasource:
-    url: jdbc:mysql://139.224.67.165:11006/esfile?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: hujianlin
+    url: ${DB_URL:jdbc:mysql://139.224.67.165:11006/esfile?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:hujianlin}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -11,9 +11,9 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
   redis:
-    host: 139.224.67.165
-    port: 11001
-    password: hujianlin
+    host: ${REDIS_HOST:139.224.67.165}
+    port: ${REDIS_PORT:11001}
+    password: ${REDIS_PASSWORD:hujianlin}
     database: 0
     timeout: 3000ms
     lettuce:
@@ -26,23 +26,24 @@ spring:
     elasticsearch:
       repositories:
         enabled: true
-      cluster-name: elasticsearch
-      cluster-nodes: 139.224.67.165:11015
-      username: elastic
-      password: hujianlin
+      cluster-name: ${ES_CLUSTER_NAME:elasticsearch}
+      cluster-nodes: ${ES_CLUSTER_NODES:139.224.67.165:11015}
+      username: ${ES_USERNAME:elastic}
+      password: ${ES_PASSWORD:hujianlin}
+
 
 # MinIO配置
 minio:
-  endpoint: http://139.224.67.165:11004
-  access-key: hujianlin
-  secret-key: hujianlin
-  bucket: elasticsearch
+  endpoint: ${MINIO_ENDPOINT:http://139.224.67.165:11004}
+  access-key: ${MINIO_ACCESS_KEY:hujianlin}
+  secret-key: ${MINIO_SECRET_KEY:hujianlin}
+  bucket: ${MINIO_BUCKET:elasticsearch}
 
 # JWT配置
 jwt:
-  secret: esfile-dev-secret-key-2024
-  expiration: 86400000
-  header: Authorization
+  secret: ${JWT_SECRET:esfile-dev-secret-key-2024-very-long-and-secure-key-for-jwt-token-generation}
+  expiration: ${JWT_EXPIRATION:86400000}
+  header: ${JWT_HEADER:Authorization}
 
 # 文件上传配置
 file:
@@ -54,14 +55,25 @@ file:
 # 日志配置
 logging:
   level:
+    root: INFO
     com.esfile: DEBUG
     org.springframework.security: DEBUG
     org.mybatis: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.boot: INFO
+    org.springframework.data: DEBUG
+    com.esfile.controller: DEBUG
+    com.esfile.service: DEBUG
+    com.esfile.mapper: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
   file:
     name: logs/esfile-backend-dev.log
-
-# 服务器配置
-server:
-  port: 8080
-  servlet:
-    context-path: /api
+    max-size: 100MB
+    max-history: 30
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB

@@ -20,18 +20,30 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const response = await loginApi(credentials)
-      const { token: newToken, refreshToken: newRefreshToken, user: userData } = response.data
       
-      // 保存认证信息
-      token.value = newToken
-      refreshToken.value = newRefreshToken
-      user.value = userData
-      
-      // 保存到localStorage
-      localStorage.setItem('token', newToken)
-      localStorage.setItem('refreshToken', newRefreshToken)
-      
-      return true
+      // 前端响应拦截器已经处理了错误情况，这里直接使用data
+      if (response.data && response.data.data) {
+        const { token: newToken, expiresIn } = response.data.data
+        
+        // 保存认证信息
+        token.value = newToken
+        refreshToken.value = newToken // 暂时使用相同token作为refreshToken
+        
+        // 保存到localStorage
+        localStorage.setItem('token', newToken)
+        localStorage.setItem('refreshToken', newToken)
+        
+        // 登录成功后获取用户信息
+        const userInfo = await getCurrentUser()
+        if (!userInfo) {
+          console.warn('获取用户信息失败，但登录成功')
+        }
+        
+        return true
+      } else {
+        console.error('登录响应格式错误:', response.data)
+        return false
+      }
     } catch (error) {
       console.error('登录失败:', error)
       return false
@@ -58,7 +70,23 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await getCurrentUserApi()
-      user.value = response.data
+      // 前端响应拦截器已经处理了错误情况，这里直接使用data
+      // 将BackendUser转换为User类型
+      const backendUser = response.data.data
+      user.value = {
+        id: backendUser.id,
+        username: backendUser.username,
+        nickname: backendUser.nickname,
+        email: backendUser.email,
+        phone: backendUser.phone,
+        avatar: backendUser.avatar,
+        gender: backendUser.gender as 'male' | 'female' | 'other' | undefined,
+        status: backendUser.status === 1 ? 'active' : 'inactive',
+        createTime: backendUser.createTime,
+        updateTime: backendUser.updateTime,
+        roles: backendUser.roles.map(roleCode => ({ id: 0, name: roleCode, code: roleCode, status: 'active', createTime: '', updateTime: '', permissions: [], userCount: 0 })),
+        permissions: backendUser.permissions.map(permCode => ({ id: 0, name: permCode, code: permCode, type: 'function', status: 'active', sort: 0, createTime: '', updateTime: '' }))
+      }
       return true
     } catch (error) {
       console.error('获取用户信息失败:', error)

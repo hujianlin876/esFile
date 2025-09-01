@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
+import org.springframework.util.StringUtils;
 
 /**
  * 数据库操作服务实现类
@@ -27,27 +28,33 @@ public class DatabaseServiceImpl implements DatabaseService {
     @Override
     public Map<String, Object> executeSql(SqlExecuteDto sqlDto) {
         Map<String, Object> result = new HashMap<>();
+        long startTime = System.currentTimeMillis();
         
         try {
             String sql = sqlDto.getSql();
-            String sqlType = getSqlType(sql);
             
-            if ("SELECT".equalsIgnoreCase(sqlType)) {
-                // 查询操作
-                result = executeQuery(sql, sqlDto.getParameters());
-            } else {
-                // 更新操作
-                result = executeUpdate(sql, sqlDto.getParameters());
+            // 基础验证 - 只检查SQL是否为空
+            if (!StringUtils.hasText(sql)) {
+                result.put("success", false);
+                result.put("error", "SQL语句不能为空");
+                result.put("executionTime", System.currentTimeMillis() - startTime);
+                return result;
             }
+
+            // 执行SQL - 直接执行任意SQL语句，不做类型判断
+            result = executeAnySql(sql, sqlDto.getParameters(), sqlDto.getMaxRows());
             
             result.put("success", true);
-            result.put("sqlType", sqlType);
-            result.put("executionTime", System.currentTimeMillis());
+            result.put("executionTime", System.currentTimeMillis() - startTime);
+            result.put("sql", sql);
             
         } catch (Exception e) {
             result.put("success", false);
             result.put("error", "SQL执行失败: " + e.getMessage());
-            result.put("sqlType", "ERROR");
+            result.put("executionTime", System.currentTimeMillis() - startTime);
+            
+            // 记录错误日志
+            logError(sqlDto, e);
         }
         
         return result;
@@ -210,9 +217,127 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     /**
+     * 执行任意SQL语句，支持多行执行（用分号分割）
+     */
+    private Map<String, Object> executeAnySql(String sql, List<Object> parameters, Integer maxRows) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // 分割SQL语句（按分号分割）
+            String[] sqlStatements = sql.split(";");
+            List<Map<String, Object>> allResults = new ArrayList<>();
+            int totalAffectedRows = 0;
+            boolean hasQuery = false;
+            boolean hasUpdate = false;
+            
+            for (String statement : sqlStatements) {
+                statement = statement.trim();
+                if (statement.isEmpty()) {
+                    continue;
+                }
+                
+                Map<String, Object> statementResult = executeSingleSql(statement, parameters, maxRows);
+                allResults.add(statementResult);
+                
+                // 统计结果类型
+                if (statementResult.containsKey("data")) {
+                    hasQuery = true;
+                }
+                if (statementResult.containsKey("affectedRows")) {
+                    hasUpdate = true;
+                    totalAffectedRows += (Integer) statementResult.get("affectedRows");
+                }
+            }
+            
+            // 设置返回结果
+            result.put("statements", allResults);
+            result.put("statementCount", allResults.size());
+            result.put("sql", sql);
+            
+            if (hasQuery && hasUpdate) {
+                result.put("sqlType", "MIXED");
+            } else if (hasQuery) {
+                result.put("sqlType", "QUERY");
+            } else if (hasUpdate) {
+                result.put("sqlType", "UPDATE");
+                result.put("totalAffectedRows", totalAffectedRows);
+            } else {
+                result.put("sqlType", "UNKNOWN");
+            }
+            
+        } catch (Exception e) {
+            result.put("error", "SQL执行失败: " + e.getMessage());
+            result.put("sql", sql);
+            result.put("sqlType", "ERROR");
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 执行单个SQL语句
+     */
+    private Map<String, Object> executeSingleSql(String sql, List<Object> parameters, Integer maxRows) {
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            // 尝试作为查询语句执行
+            try {
+                List<Map<String, Object>> data;
+                
+                if (parameters != null && !parameters.isEmpty()) {
+                    data = jdbcTemplate.queryForList(sql, parameters.toArray());
+                } else {
+                    data = jdbcTemplate.queryForList(sql);
+                }
+                
+                result.put("data", data);
+                result.put("rowCount", data.size());
+                result.put("sql", sql);
+                result.put("sqlType", "QUERY");
+                
+                if (maxRows != null && maxRows > 0) {
+                    result.put("maxRows", maxRows);
+                }
+                
+                return result;
+                
+            } catch (Exception queryException) {
+                // 如果查询失败，尝试作为更新语句执行
+                try {
+                    int affectedRows;
+                    
+                    if (parameters != null && !parameters.isEmpty()) {
+                        affectedRows = jdbcTemplate.update(sql, parameters.toArray());
+                    } else {
+                        affectedRows = jdbcTemplate.update(sql);
+                    }
+                    
+                    result.put("affectedRows", affectedRows);
+                    result.put("sql", sql);
+                    result.put("sqlType", "UPDATE");
+                    
+                    return result;
+                    
+                } catch (Exception updateException) {
+                    // 如果更新也失败，抛出原始查询异常
+                    throw queryException;
+                }
+            }
+            
+        } catch (Exception e) {
+            result.put("error", "SQL执行失败: " + e.getMessage());
+            result.put("sql", sql);
+            result.put("sqlType", "ERROR");
+        }
+        
+        return result;
+    }
+
+    /**
      * 执行查询SQL
      */
-    private Map<String, Object> executeQuery(String sql, List<Object> parameters) {
+    private Map<String, Object> executeQuery(String sql, List<Object> parameters, Integer maxRows) {
         Map<String, Object> result = new HashMap<>();
         
         try {
@@ -227,6 +352,10 @@ public class DatabaseServiceImpl implements DatabaseService {
             result.put("data", data);
             result.put("rowCount", data.size());
             result.put("sql", sql);
+            
+            if (maxRows != null && maxRows > 0) {
+                result.put("maxRows", maxRows);
+            }
             
         } catch (Exception e) {
             result.put("error", "查询执行失败: " + e.getMessage());
@@ -273,6 +402,12 @@ public class DatabaseServiceImpl implements DatabaseService {
         
         if (upperSql.startsWith("SELECT")) {
             return "SELECT";
+        } else if (upperSql.startsWith("SHOW")) {
+            return "SHOW";
+        } else if (upperSql.startsWith("DESCRIBE") || upperSql.startsWith("DESC")) {
+            return "DESCRIBE";
+        } else if (upperSql.startsWith("EXPLAIN")) {
+            return "EXPLAIN";
         } else if (upperSql.startsWith("INSERT")) {
             return "INSERT";
         } else if (upperSql.startsWith("UPDATE")) {
@@ -285,8 +420,36 @@ public class DatabaseServiceImpl implements DatabaseService {
             return "DROP";
         } else if (upperSql.startsWith("ALTER")) {
             return "ALTER";
+        } else if (upperSql.startsWith("TRUNCATE")) {
+            return "TRUNCATE";
+        } else if (upperSql.startsWith("GRANT")) {
+            return "GRANT";
+        } else if (upperSql.startsWith("REVOKE")) {
+            return "REVOKE";
+        } else if (upperSql.startsWith("SET")) {
+            return "SET";
+        } else if (upperSql.startsWith("USE")) {
+            return "USE";
         } else {
             return "UNKNOWN";
         }
+    }
+
+    /**
+     * 判断是否为查询语句
+     */
+    private boolean isQueryStatement(String sqlType) {
+        return "SELECT".equalsIgnoreCase(sqlType) || 
+               "SHOW".equalsIgnoreCase(sqlType) || 
+               "DESCRIBE".equalsIgnoreCase(sqlType) || 
+               "EXPLAIN".equalsIgnoreCase(sqlType);
+    }
+
+    /**
+     * 记录错误日志
+     */
+    private void logError(SqlExecuteDto sqlDto, Exception e) {
+        // 这里可以添加实际的日志记录逻辑，例如使用SLF4J或Log4j
+        System.err.println("SQL执行失败: " + sqlDto.getSql() + "，参数: " + sqlDto.getParameters() + "，错误: " + e.getMessage());
     }
 }
